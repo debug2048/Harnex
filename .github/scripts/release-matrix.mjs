@@ -9,7 +9,6 @@ const requestedCommit = process.env.RELEASE_SOURCE_COMMIT || '';
 assert.match(tag || '', /^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/);
 if (requestedCommit) {
   assert.match(requestedCommit, /^[0-9a-f]{40}$/, 'Rebuilds require a full source commit.');
-  assert.equal(selection, 'macos', 'Source overrides are limited to macOS rebuilds.');
 }
 const source = resolve('source');
 const version = JSON.parse(readFileSync(resolve(source, 'package.json'), 'utf8')).version;

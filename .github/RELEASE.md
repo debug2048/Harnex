@@ -11,15 +11,17 @@ This lets maintainers add or repair build automation without moving a published
 tag or compiling unpublished product changes. Every platform manifest records
 the tagged source commit, rather than the workflow commit.
 
-For an explicitly requested same-version macOS rebuild, select `macos` and set
-`source_commit` to the full reviewed commit SHA. The source package version must
-still match the existing release tag. This pins both Mac builds to that commit
-without moving the tag; their manifests record the actual source. After verifying
-both platform artifacts, back up and replace the two DMGs and matching macOS
-offline kits together, regenerate the public `SHA256SUMS`, and record the rebuild
-commit in the Release notes. Preserve the other platform downloads. Do not use
-the all-platform completion workflow for a release containing a Mac rebuild from
-a different source commit.
+For an explicitly requested same-version rebuild, select the required platforms
+and set `source_commit` to the full reviewed commit SHA. The source package
+version must still match the existing release tag. This pins every selected
+build to that commit without moving the tag; retain the actual source SHA in
+the platform manifests and verification report. After verifying all selected
+artifacts, back up and replace their installers and matching offline kits,
+regenerate the public `SHA256SUMS`, and update download sizes in the Release
+notes. Keep the notes focused on downloads and usage. Preserve any unselected
+platform downloads. The all-platform completion workflow accepts the original
+tagged source only and must not be used to replace an existing release with
+artifacts from a different source commit.
 
 Successful jobs retain installers, offline kits, dual VSIX packages and native
 CLI packages as Actions artifacts for seven days. Linux x64 also includes the

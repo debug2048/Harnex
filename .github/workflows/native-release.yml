@@ -9,7 +9,7 @@ on:
         default: v1.0.0
         type: string
       source_commit:
-        description: Optional full source commit for a same-version macOS rebuild
+        description: Optional full source commit for a same-version rebuild
         required: false
         type: string
       platforms:
