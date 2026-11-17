@@ -8,6 +8,10 @@ on:
         required: true
         default: v1.0.0
         type: string
+      source_commit:
+        description: Optional full source commit for a same-version macOS rebuild
+        required: false
+        type: string
       platforms:
         description: Native platforms to build and verify
         required: true
@@ -29,7 +33,7 @@ concurrency:
 
 jobs:
   plan:
-    name: Resolve immutable release source
+    name: Resolve pinned release source
     runs-on: ubuntu-22.04
     timeout-minutes: 10
     outputs:
@@ -43,7 +47,7 @@ jobs:
           persist-credentials: false
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag }}
+          ref: ${{ inputs.source_commit || inputs.tag }}
           path: source
           persist-credentials: false
       - uses: actions/setup-node@v4
@@ -54,6 +58,7 @@ jobs:
         env:
           RELEASE_TAG: ${{ inputs.tag }}
           RELEASE_PLATFORMS: ${{ inputs.platforms }}
+          RELEASE_SOURCE_COMMIT: ${{ inputs.source_commit }}
         run: node .ci/.github/scripts/release-matrix.mjs
 
   build:
