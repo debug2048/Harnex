@@ -46,6 +46,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   let lifecycleEvents: EventSource | null = null
   let lifecyclePoll: ReturnType<typeof setInterval> | null = null
   let bootstrapPromise: Promise<void> | null = null
+  let refreshInFlight: { epoch: number; promise: Promise<void> } | null = null
   let bootstrapped = false
   const initializing = ref(true)
   const startupProfile = ref<'PERSONAL' | 'PROJECT' | null>(null)
@@ -239,10 +240,18 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   async function refresh() {
     if (!available.value) return
     const requestEpoch = epoch.value
-    const result = await supervisor.list()
-    // A list request started before STOP/OPEN must not repaint the replacement JVM
-    // with the old workspace projection when its response arrives late.
-    if (requestEpoch === epoch.value) applyList(result)
+    if (refreshInFlight?.epoch === requestEpoch) return refreshInFlight.promise
+    const pending = { epoch: requestEpoch, promise: (async () => {
+      const result = await supervisor.list()
+      // A list request started before STOP/OPEN must not repaint the replacement JVM
+      // with the old workspace projection when its response arrives late.
+      if (requestEpoch === epoch.value) applyList(result)
+    })() }
+    // Native reads run off the UI thread. A slow filesystem must not accumulate
+    // overlapping polls or let an older snapshot overwrite a newer response.
+    refreshInFlight = pending
+    try { await pending.promise }
+    finally { if (refreshInFlight === pending) refreshInFlight = null }
   }
 
   async function open(id: string, stopActiveRun = false) {

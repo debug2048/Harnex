@@ -240,8 +240,11 @@ pub(crate) async fn check_for_updates(app: AppHandle, interactive: bool) {
 
 /// Native folder picker. Only the bundled Tauri SPA receives IPC capability; Runtime-served pages never do.
 fn pick_folder(app: &AppHandle) -> Option<PathBuf> {
-    app.dialog()
-        .file()
+    let mut dialog = app.dialog().file();
+    if let Some(window) = app.get_webview_window("main") {
+        dialog = dialog.set_parent(&window);
+    }
+    dialog
         .blocking_pick_folder()
         .and_then(|fp| fp.into_path().ok())
 }
@@ -261,8 +264,14 @@ pub(crate) fn window_set_theme(app: AppHandle, mode: String) -> Result<(), Strin
 }
 
 #[tauri::command]
-pub(crate) fn workspace_pick_directory(app: AppHandle) -> Option<String> {
-    pick_folder(&app).map(|path| strip_verbatim(path).to_string_lossy().to_string())
+pub(crate) async fn workspace_pick_directory(app: AppHandle) -> Result<Option<String>, String> {
+    // The dialog needs the macOS event loop to present and complete its sheet.
+    // Waiting on that same thread prevents both completion and the loading UI.
+    tauri::async_runtime::spawn_blocking(move || {
+        pick_folder(&app).map(|path| strip_verbatim(path).to_string_lossy().to_string())
+    })
+    .await
+    .map_err(|error| error.to_string())
 }
 
 fn resolve_workspace_open_target(root: &Path, relative: &str) -> Result<PathBuf, String> {

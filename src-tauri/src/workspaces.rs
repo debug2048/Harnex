@@ -375,8 +375,12 @@ fn workspace_list_value(app: &AppHandle) -> Value {
 }
 
 #[tauri::command]
-pub(crate) fn workspace_list(app: AppHandle) -> Value {
-    workspace_list_value(&app)
+pub(crate) async fn workspace_list(app: AppHandle) -> Result<Value, String> {
+    // Polling resolves paths and reads the catalog while startup workers update it.
+    // Keep filesystem access and mutex waits off the native event loop.
+    tauri::async_runtime::spawn_blocking(move || workspace_list_value(&app))
+        .await
+        .map_err(|error| error.to_string())
 }
 
 #[tauri::command]
@@ -432,8 +436,19 @@ pub(crate) fn workspace_background(
 }
 
 #[tauri::command]
-pub(crate) fn workspace_register(
+pub(crate) async fn workspace_register(
     app: AppHandle,
+    root: String,
+    name: Option<String>,
+    data_dir: Option<String>,
+) -> Result<Value, String> {
+    tauri::async_runtime::spawn_blocking(move || register_workspace(&app, root, name, data_dir))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+fn register_workspace(
+    app: &AppHandle,
     root: String,
     name: Option<String>,
     data_dir: Option<String>,
@@ -469,7 +484,7 @@ pub(crate) fn workspace_register(
             Ok(())
         })?;
     }
-    workspace_list_value(&app)
+    workspace_list_value(app)
         .get("workspaces")
         .and_then(Value::as_array)
         .and_then(|items| {

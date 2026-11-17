@@ -187,6 +187,18 @@ where
                 }
                 std::thread::sleep(Duration::from_millis(25));
             }
+            // Windows can report access/sharing denial while another process's
+            // deleted lock still has an open handle. Retry without inspecting or
+            // deleting that lease; a genuine permission failure remains bounded.
+            Err(error) if cfg!(windows) && matches!(error.raw_os_error(), Some(5 | 32 | 33)) => {
+                if Instant::now() >= deadline {
+                    return Err(format!(
+                        "cannot acquire workspace catalog lock {}: {error}",
+                        lock_path.display()
+                    ));
+                }
+                std::thread::sleep(Duration::from_millis(25));
+            }
             Err(error) => return Err(error.to_string()),
         }
     }
