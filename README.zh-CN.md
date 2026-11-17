@@ -53,10 +53,10 @@ Harnex 将 AI 对话与项目工作放在同一个工作台中。你可以提问
 | Windows x64 | `win32-x64` | `.exe` |
 | macOS Apple Silicon（M 系列） | `darwin-arm64` | `.dmg` |
 | macOS Intel | `darwin-x64` | `.dmg` |
-| Linux x64 | `linux-x64` | `.deb` / `.rpm` / `.AppImage` |
-| Linux ARM64 | `linux-arm64` | `.deb` / `.rpm` / `.AppImage` |
+| Linux x64 | `linux-x64` | `.AppImage` |
+| Linux ARM64 | `linux-arm64` | `.AppImage` |
 
-需要 CLI/TUI 或 VS Code 时，下载同平台的 `_offline.zip`（Windows）或 `_offline.tar.gz`（macOS/Linux）。离线包内置 Java 与 ripgrep，并附带 Runtime / UI 两份 VSIX；无需 npm 或插件市场账号。项目自身的 Git、编译器等工具仍由项目环境提供。
+需要 CLI/TUI 或 VS Code 时，下载同平台的 `_offline.zip`（Windows）或 `_offline.tar.gz`（macOS/Linux）。离线包内含桌面安装程序（Linux 同时包含 DEB/RPM/AppImage）、便携 Runtime 和 UI/Runtime 两份 VSIX，内置 Java 与 ripgrep；无需 npm 或插件市场账号。项目自身的 Git、编译器等工具仍由项目环境提供。
 
 1. 安装并打开 Harnex；首次体验可以先使用个人会话。
 2. 在“设置 → 模型”中配置协议、服务地址、API Key（服务需要时）和准确的模型 ID，然后选择该模型。

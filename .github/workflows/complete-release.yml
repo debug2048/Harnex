@@ -4,12 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing release tag whose missing native assets should be added
+        description: Existing release tag to publish with the 11-file download layout
         required: true
         default: v1.0.0
         type: string
       build_run_ids:
-        description: Native build run IDs, comma separated; selected platform jobs must have passed
+        description: Native run IDs covering all five platforms; selected jobs must have passed
         required: true
         type: string
 

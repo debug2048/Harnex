@@ -27,18 +27,22 @@ verified assets from the same source commit, then run the all-platform verifier:
 GITHUB_SHA="<tagged source commit>" node scripts/build/release-assets.mjs --verify dist/release-all
 ```
 
-Upload the complete verified set and its generated `SHA256SUMS` to the matching
-GitHub Release. The build workflow never changes repository visibility or
-automatically publishes a partial set of assets.
+Prepare the public download set with `node scripts/build/public-release.mjs
+--from dist/release-all --output dist/release-public --notes dist/release-notes.md`.
+Upload only `dist/release-public/*`: five primary installers (EXE, two DMGs and
+two AppImages), five complete offline kits and one `SHA256SUMS`. Linux DEB/RPM,
+VSIX packages and the portable Runtime remain inside the offline kits. Full
+platform manifests and developer packages stay in build artifacts. The build
+workflow never changes repository visibility or publishes a partial platform set.
 
 To complete an existing Release, run **Complete multiplatform release** with
 the same version tag and one or more comma-separated native build run IDs. Every
-selected platform job and its required checks must have passed; a retry can
-reuse successful platforms from an earlier run. It downloads the
-existing assets and the missing platform artifacts on a GitHub runner, verifies
-all five source manifests and checksums, then uploads only missing files. It
-preserves existing program bytes, replaces the combined checksum list, and
-updates the platform table and verification notes. Existing assets from another
+selected platform job and its required checks must have passed; the selected
+runs must cover all five targets when a published Release has no build manifests.
+A retry can reuse successful platforms from earlier runs. It verifies the full
+build inventories before selecting the 11 public assets, checks existing bytes,
+then removes redundant standalone components only after all retained files are
+present and verified. Release notes describe downloads, archive contents and use. Existing assets from another
 source commit, failed build jobs, unexpected files, and immutable releases stop
 the workflow before upload.
 

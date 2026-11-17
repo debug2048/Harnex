@@ -3,7 +3,8 @@ import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { preparePublicRelease, publicReleaseNotes } from '../../scripts/build/public-release.mjs';
+import { TARGETS } from '../../scripts/build/release-assets.mjs';
 
 const repository = process.env.GITHUB_REPOSITORY;
 const tag = process.env.RELEASE_TAG;
@@ -18,6 +19,7 @@ const work = resolve('release-work');
 const existing = join(work, 'existing');
 const downloads = join(work, 'builds');
 const combined = join(work, 'combined');
+const publishDirectory = join(work, 'public');
 for (const directory of [existing, downloads, combined]) mkdirSync(directory, { recursive: true });
 
 function execute(command, args, cwd = process.cwd()) {
@@ -31,7 +33,7 @@ const sha = path => createHash('sha256').update(readFileSync(path)).digest('hex'
 const commit = execute('git', ['rev-parse', 'HEAD'], source);
 assert.match(commit, /^[0-9a-f]{40}$/);
 assert.equal(api(`repos/${repository}/commits/${tag}`).sha, commit);
-const { TARGETS, verifyRelease } = await import(pathToFileURL(join(source, 'scripts/build/release-assets.mjs')).href);
+
 
 const builds = [...new Set(buildRunIds.split(','))].map(id => {
   const run = api(`repos/${repository}/actions/runs/${id}`);
@@ -97,7 +99,9 @@ for (const target of TARGETS) {
   }
   selected.push({ target, origin, signing: manifest.signing, verificationUrl });
 }
-const verification = verifyRelease(combined, version, commit);
+const publication = preparePublicRelease(combined, version, commit, publishDirectory);
+const verification = { targets: publication.targets, assets: publication.assets - 1, version, commit };
+const publicInventory = new Set(publication.downloads.flatMap(item => [item.desktop.name, item.offline.name]));
 assert.equal(verification.targets, 5);
 writeFileSync(join(work, 'verification.json'), JSON.stringify({ status: 'verified-before-upload', ...verification, selected,
   buildRuns: builds.map(build => build.run.html_url) }, null, 2) + '\n');
@@ -109,67 +113,35 @@ for (const remote of release.assets) {
     assert.equal(remote.digest, `sha256:${sha(join(combined, remote.name))}`, `Published asset differs: ${remote.name}`);
   }
 }
-for (const name of [...inventory].sort()) {
+for (const name of [...publicInventory].sort()) {
   if (release.assets.some(asset => asset.name === name)) continue;
   console.log(`Uploading new platform asset: ${name}`);
-  gh(['release', 'upload', tag, join(combined, name), '--repo', repository]);
+  gh(['release', 'upload', tag, join(publishDirectory, name), '--repo', repository]);
 }
 release = api(`repos/${repository}/releases/${release.id}`);
-for (const name of inventory) {
+for (const name of publicInventory) {
   const remote = release.assets.find(asset => asset.name === name);
   assert.ok(remote, name);
   assert.equal(remote.state, 'uploaded', name);
   assert.equal(remote.size, statSync(join(combined, name)).size, name);
   assert.equal(remote.digest, `sha256:${sha(join(combined, name))}`, name);
 }
-gh(['release', 'upload', tag, join(combined, 'SHA256SUMS'), '--repo', repository, '--clobber']);
-const builtTargets = selected.filter(item => item.origin === 'verified-build').map(item => item.target);
-const notes = `# Harnex ${version}
-
-Harnex 提供 Web、桌面工作台、CLI / TUI 和 VS Code 多端入口。本次 Release 的五个平台安装包已齐全。
-
-## 下载选择
-
-| 平台 | 架构 | 桌面安装包 | 完整离线包 |
-| --- | --- | --- | --- |
-| Windows | x64 | \`Harnex_${version}_win32-x64.exe\` | \`Harnex_${version}_win32-x64_offline.zip\` |
-| macOS | Apple Silicon | \`Harnex_${version}_darwin-arm64.dmg\` | \`Harnex_${version}_darwin-arm64_offline.tar.gz\` |
-| macOS | Intel | \`Harnex_${version}_darwin-x64.dmg\` | \`Harnex_${version}_darwin-x64_offline.tar.gz\` |
-| Linux | x64 | \`Harnex_${version}_linux-x64.deb\`、\`.rpm\`、\`.AppImage\` | \`Harnex_${version}_linux-x64_offline.tar.gz\` |
-| Linux | ARM64 | \`Harnex_${version}_linux-arm64.deb\`、\`.rpm\`、\`.AppImage\` | \`Harnex_${version}_linux-arm64_offline.tar.gz\` |
-
-离线包包含桌面安装程序、便携 Runtime、内置 Java 与 ripgrep，以及对应平台的 Runtime / UI 两个 VSIX。VS Code 请先安装 Runtime 扩展，再安装 UI 扩展；UI 扩展独立使用自己的版本号。
-
-附件还包含各平台原生 CLI npm 包、主 npm 包、独立后端 JAR 和 Web UI 压缩包。原生 CLI npm 平台包不包含完整 Runtime；需要自包含运行环境时，请选择离线包。使用独立后端 JAR 需要 Java 17+。模型调用需要配置自己的模型服务。
-
-## 验证
-
-- 五个平台的源码提交均为 \`${commit}\`，没有移动发布标签或替换已发布的程序包。
-- 五平台附件格式、数量、文件大小和 SHA-256 已统一校验。\`SHA256SUMS\` 覆盖本页全部人工上传附件（校验文件自身除外）。
-- 本次构建并通过 Runtime 完整性校验的目标：${builtTargets.join('、') || '沿用同源已发布产物'}。公仓不包含独立测试用例；行为验收结果须另外留证。
-- 沿用的附件保持原有字节和校验记录；构建及哈希校验不代替桌面、TUI 或扩展的行为验收。
-- VS Code Extension Host 端到端检查，以及 macOS/Linux 桌面交互安装验收，尚未完成。
-
-## 环境与签名
-
-- Windows 桌面面向 Windows 10 1903+/11 x64，需要 WebView2；安装程序未做 Authenticode 签名。
-- macOS 最低版本为 13；本次使用 ad-hoc 签名，未做 Apple Developer ID 签名或公证。
-- Linux 构建基线为 Ubuntu 22.04，桌面需要 WebKitGTK 4.1 等系统组件；优先使用发行版对应的 DEB/RPM 安装依赖。
-- 本次未启用自动更新。
-
-在 Git Bash 或 Unix 终端运行 \`sha256sum -c SHA256SUMS\`（macOS 可使用 \`shasum -a 256 -c SHA256SUMS\`）校验下载文件。
-
-构建记录：${selected.filter(item => item.verificationUrl).map(item => `[${item.target}](${item.verificationUrl})`).join('、')}。使用说明：[中文用户手册](https://github.com/${repository}/blob/${tag}/docs/06_%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8C.md)、[English user guide](https://github.com/${repository}/blob/${tag}/docs/en/user-guide.md)。
-`;
+gh(['release', 'upload', tag, join(publishDirectory, 'SHA256SUMS'), '--repo', repository, '--clobber']);
+for (const remote of release.assets) {
+  if (remote.name !== 'SHA256SUMS' && !publicInventory.has(remote.name)) {
+    gh(['api', '--method', 'DELETE', `repos/${repository}/releases/assets/${remote.id}`]);
+  }
+}
+const notes = publicReleaseNotes(version, repository, publication.downloads);
 const notesFile = join(work, 'release-notes.md');
 writeFileSync(notesFile, notes);
 gh(['release', 'edit', tag, '--repo', repository, '--title', `Harnex ${version}`, '--notes-file', notesFile]);
 release = api(`repos/${repository}/releases/${release.id}`);
 assert.equal(release.name, `Harnex ${version}`);
 assert.equal(release.body, notes);
-assert.equal(release.assets.length, inventory.size + 1);
+assert.equal(release.assets.length, publicInventory.size + 1);
 const sums = release.assets.find(asset => asset.name === 'SHA256SUMS');
-assert.equal(sums.digest, `sha256:${sha(join(combined, 'SHA256SUMS'))}`);
+assert.equal(sums.digest, `sha256:${sha(join(publishDirectory, 'SHA256SUMS'))}`);
 const result = { status: 'complete-release-verified', ...verification, assetCount: release.assets.length,
   url: release.html_url, selected, buildRuns: builds.map(build => build.run.html_url) };
 writeFileSync(join(work, 'verification.json'), JSON.stringify(result, null, 2) + '\n');

@@ -53,10 +53,10 @@ Available model features depend on your provider and configuration. See the [use
 | Windows x64 | `win32-x64` | `.exe` |
 | macOS Apple Silicon (M series) | `darwin-arm64` | `.dmg` |
 | macOS Intel | `darwin-x64` | `.dmg` |
-| Linux x64 | `linux-x64` | `.deb` / `.rpm` / `.AppImage` |
-| Linux ARM64 | `linux-arm64` | `.deb` / `.rpm` / `.AppImage` |
+| Linux x64 | `linux-x64` | `.AppImage` |
+| Linux ARM64 | `linux-arm64` | `.AppImage` |
 
-For CLI/TUI or VS Code, choose the matching `_offline.zip` (Windows) or `_offline.tar.gz` (macOS/Linux). It includes Java, ripgrep and both Runtime/UI VSIX packages. No npm or Marketplace account is needed; project-specific tools such as Git and compilers still come from the project environment.
+For CLI/TUI or VS Code, choose the matching `_offline.zip` (Windows) or `_offline.tar.gz` (macOS/Linux). It includes desktop installers (DEB/RPM/AppImage on Linux), a portable Runtime with Java and ripgrep, and both Runtime/UI VSIX packages. No npm or Marketplace account is needed; project-specific tools such as Git and compilers still come from the project environment.
 
 1. Install and open Harnex. A personal conversation is enough for a first check.
 2. In **Settings → Models**, configure the protocol, provider URL, API key when required, and exact model ID, then select that model.

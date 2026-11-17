@@ -12,7 +12,7 @@ Download `SHA256SUMS` alongside your selected artifact. Compare its entry with `
 
 - **Windows:** run the EXE installer; WebView2 is required. v1.0.0 is unsigned and may trigger publisher or SmartScreen prompts. Verify the source and hash before following OS prompts; managed devices may require administrator assistance.
 - **macOS:** open the matching DMG, copy Harnex to Applications, and launch it. v1.0.0 uses ad-hoc signing without notarization. After verifying the source, follow the per-app guidance in System Settings → Privacy & Security if Gatekeeper blocks it; do not disable Gatekeeper globally.
-- **Linux:** install the DEB/RPM with the distribution's package manager and dependencies. AppImage also requires compatible system libraries. See the platform boundaries below.
+- **Linux:** download the standalone AppImage, or get DEB/RPM installers from the complete offline kit's `desktop/` directory and install them with the distribution's package manager. AppImage also requires compatible system libraries. See the platform boundaries below.
 - **VS Code:** install the platform Runtime VSIX first, then the UI VSIX, and reload the window. Marketplace distribution is not required.
 
 1. Start with a personal conversation. In **Settings → Models**, configure the protocol, provider URL, API key when required and exact model ID, then select the model. A model service and any API credits are supplied by the user.
@@ -117,6 +117,8 @@ Use the same override files used for the original deployment. Changes to environ
 ## Desktop and portable bundles
 
 Choose an artifact matching the OS and CPU architecture. Desktop installers and portable Runtime Bundles contain a JRE, Harnex Runtime, native CLI and ripgrep.
+
+The Release page offers one primary installer and one complete offline kit per platform, plus one checksum file. VSIX files are obtained from the offline kit; developer npm/JAR/Web archives and build manifests are not separate user downloads.
 
 An offline distribution contains:
 
