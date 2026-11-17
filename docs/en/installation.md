@@ -229,6 +229,7 @@ These commands archive the selected project or personal data; back up user confi
 | Symptom | Check |
 | --- | --- |
 | Model request fails | Provider URL, protocol profile, exact model ID, credentials and connectivity |
+| Previous model list remains after saving | On macOS desktop with a local Runtime, a new or changed API key is stored in Keychain and requires **Reconnect to apply** in Settings. The running Runtime retains its previous provider configuration until then. Other platforms can also require reconnection for pending proxy changes. |
 | npm TUI is unavailable | Matching optional CLI package, Java and ripgrep; use a complete Runtime Bundle if needed |
 | VS Code cannot start a Runtime | Installed platform companion or a trusted existing Runtime for this project |
 | A port is occupied | Stop the relevant instance or choose a different port; internal native Runtime ports are allocated automatically |

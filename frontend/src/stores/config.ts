@@ -40,6 +40,8 @@ export const useConfigStore = defineStore('config', () => {
   const revision = computed(() => document.value?.revision || '')
   const restartRequired = computed(() => !!document.value && (document.value.restartRequired ?? document.value.reloadPolicy !== 'live'))
   const reloadError = computed(() => document.value?.reloadError || '')
+  const modelsPendingReconnect = computed(() => restartRequired.value
+    && !!document.value?.deferredSections?.includes('providers'))
 
   function savedFeedback() {
     if (reloadError.value) {
@@ -47,10 +49,12 @@ export const useConfigStore = defineStore('config', () => {
       message.value = t('settings.savedNotApplied')
       return false
     }
-    message.value = t(restartRequired.value
-      ? document.value?.reloadPolicy === 'mixed'
-        ? 'settings.savedMixed' : 'settings.savedReopen'
-      : 'settings.savedLive')
+    message.value = t(modelsPendingReconnect.value
+      ? 'settings.savedModelsPendingReconnect'
+      : restartRequired.value
+        ? document.value?.reloadPolicy === 'mixed'
+          ? 'settings.savedMixed' : 'settings.savedReopen'
+        : 'settings.savedLive')
     return true
   }
 
@@ -170,7 +174,7 @@ export const useConfigStore = defineStore('config', () => {
   }
 
   return {
-    document, draft, effective, revision, loading, dirty, dirtySections, errors, issues, message, restartRequired, reloadError,
+    document, draft, effective, revision, loading, dirty, dirtySections, errors, issues, message, restartRequired, reloadError, modelsPendingReconnect,
     load, touch, setSection, isDirtySection, clearFeedback, validate, save, applySavedConfiguration, resetDraft,
   }
 })

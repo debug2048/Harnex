@@ -1464,7 +1464,7 @@ async function focusIssue(issue: ConfigIssue) {
           @click="saveConfiguration">{{ t('settings.validateSave') }}</button></div>
     </footer>
     <footer v-else-if="config.message || config.restartRequired || config.reloadError" class="dirty-bar saved">
-      <span>{{ applyingConfiguration ? t('settings.applyingConfiguration') : config.message || t(config.reloadError ? 'settings.savedNotApplied' : 'settings.savedMixed') }}</span>
+      <span>{{ applyingConfiguration ? t('settings.applyingConfiguration') : config.message || t(config.reloadError ? 'settings.savedNotApplied' : config.modelsPendingReconnect ? 'settings.savedModelsPendingReconnect' : 'settings.savedMixed') }}</span>
       <button v-if="config.reloadError" :disabled="config.loading || config.dirty || applyingConfiguration || workspace.switching"
         @click="config.applySavedConfiguration">{{ t('settings.reapplyConfiguration') }}</button>
       <button v-if="config.restartRequired" :disabled="applyingConfiguration || workspace.switching"
