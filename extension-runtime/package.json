@@ -1,0 +1,15 @@
+{
+  "name": "harnex-runtime",
+  "displayName": "Harnex Runtime",
+  "icon": "media/logo.png",
+  "description": "Platform Runtime Bundle for the Harnex VS Code extension",
+  "version": "1.0.0",
+  "publisher": "harnex",
+  "license": "Apache-2.0",
+  "private": true,
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "extensionKind": ["workspace"]
+}

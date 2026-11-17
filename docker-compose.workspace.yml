@@ -1,0 +1,11 @@
+# Optional: operate on an existing host project instead of the managed workspace.
+# Set HARNEX_WORKSPACE_HOST to an existing absolute directory in .env, then run:
+# docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.workspace.yml up -d --build
+services:
+  backend:
+    volumes:
+      - type: bind
+        source: ${HARNEX_WORKSPACE_HOST:?Set HARNEX_WORKSPACE_HOST to an existing absolute project directory}
+        target: /workspace
+        bind:
+          create_host_path: false

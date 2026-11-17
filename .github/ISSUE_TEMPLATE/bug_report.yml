@@ -1,0 +1,67 @@
+name: Bug report / 故障报告
+description: Installation, Runtime or client failures / 安装、运行或客户端故障
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing Issues first. For vulnerabilities, follow [SECURITY.md](https://github.com/debug2048/Harnex/blob/main/SECURITY.md).
+        请先搜索已有问题。不要上传 API Key、Token、密码、私有地址、个人信息或机密项目文件；安全漏洞不要在此公开。
+  - type: input
+    id: version
+    attributes:
+      label: Harnex version / 版本
+      placeholder: "1.0.0; UI extension 0.1.0 if applicable"
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system and CPU / 系统与架构
+      placeholder: "Windows 11 x64 / macOS 15 ARM64 / Ubuntu 22.04 x64"
+    validations:
+      required: true
+  - type: dropdown
+    id: client
+    attributes:
+      label: Client / 使用入口
+      options:
+        - Desktop / 桌面
+        - Web / Docker
+        - CLI / TUI
+        - VS Code
+        - Build from source / 源码构建
+    validations:
+      required: true
+  - type: input
+    id: installation
+    attributes:
+      label: Installation method / 安装方式
+      description: "Release artifact name, Docker or source commit; no private paths / 附件名、Docker 或源码提交，不含私有路径"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce / 复现步骤
+      description: "Use a minimal example with non-confidential data / 请用最小、非机密示例"
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior / 预期与实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs or screenshots / 脱敏日志或截图
+      description: "Review attachments for credentials and confidential content before submitting / 提交前检查附件中是否含凭据和机密内容"
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Before submitting / 提交前
+      options:
+        - label: "I removed credentials and confidential data and am not publicly reporting a vulnerability. / 已去除凭据和机密数据，且本条不公开披露安全漏洞。"
+          required: true

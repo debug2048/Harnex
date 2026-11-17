@@ -1,0 +1,223 @@
+{
+  "name": "harnex-vscode",
+  "displayName": "Harnex",
+  "icon": "media/logo.png",
+  "description": "Harnex agent harness for VS Code — chat, native diff review, permission modes",
+  "version": "0.1.0",
+  "publisher": "harnex",
+  "license": "Apache-2.0",
+  "private": true,
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "AI",
+    "Chat"
+  ],
+  "extensionKind": [
+    "workspace"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "harnex",
+          "title": "Harnex",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "harnex": [
+        {
+          "type": "webview",
+          "id": "harnex.chat",
+          "name": "Chat"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "harnex.connectRuntime",
+        "title": "Harnex: Connect Runtime"
+      },
+      {
+        "command": "harnex.startRuntime",
+        "title": "Harnex: Start Independent Runtime"
+      },
+      {
+        "command": "harnex.attachRuntime",
+        "title": "Harnex: Attach to Existing Runtime"
+      },
+      {
+        "command": "harnex.disconnectRuntime",
+        "title": "Harnex: Disconnect / Stop Runtime"
+      },
+      {
+        "command": "harnex.openChat",
+        "title": "Harnex: Open Chat"
+      },
+      {
+        "command": "harnex.restoreSidebar",
+        "title": "Harnex: Restore Sidebar Icon"
+      },
+      {
+        "command": "harnex.newThread",
+        "title": "Harnex: New Conversation"
+      },
+      {
+        "command": "harnex.showHistory",
+        "title": "Harnex: Show Conversation History"
+      },
+      {
+        "command": "harnex.askSelection",
+        "title": "Harnex: Ask about Selection"
+      },
+      {
+        "command": "harnex.explainSelection",
+        "title": "Harnex: Explain Selection"
+      },
+      {
+        "command": "harnex.fixDiagnostic",
+        "title": "Harnex: Fix with Harnex"
+      },
+      {
+        "command": "harnex.setPermissionMode",
+        "title": "Harnex: Set Permission Mode"
+      },
+      {
+        "command": "harnex.showPendingInteractions",
+        "title": "Harnex: Show Pending Interactions"
+      },
+      {
+        "command": "harnex.restartBackend",
+        "title": "Harnex: Restart / Reconnect Runtime"
+      },
+      {
+        "command": "harnex.showLogs",
+        "title": "Harnex: Show Backend Logs"
+      },
+      {
+        "command": "harnex.showDiagnostics",
+        "title": "Harnex: Show Diagnostics"
+      },
+      {
+        "command": "harnex.copyCliAttachCommand",
+        "title": "Harnex: Copy CLI Attach Command"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "harnex.askSelection",
+          "when": "editorHasSelection",
+          "group": "harnex@1"
+        },
+        {
+          "command": "harnex.explainSelection",
+          "when": "editorHasSelection",
+          "group": "harnex@2"
+        },
+        {
+          "command": "harnex.fixDiagnostic",
+          "when": "editorHasSelection",
+          "group": "harnex@3"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "harnex.openChat",
+        "key": "ctrl+shift+l",
+        "mac": "cmd+shift+l"
+      },
+      {
+        "command": "harnex.askSelection",
+        "key": "ctrl+alt+i",
+        "mac": "cmd+alt+i",
+        "when": "editorHasSelection"
+      }
+    ],
+    "configuration": {
+      "title": "Harnex",
+      "properties": {
+        "harnex.backend.mode": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "managed",
+            "existing"
+          ],
+          "default": "auto",
+          "enumDescriptions": [
+            "Start an installed Runtime bundle when Harnex is opened and no manifest is configured. Without a bundle, wait for the user to connect.",
+            "Start and own a Runtime from the installed companion bundle.",
+            "Wait for the user to attach. When VS Code changes projects, ask before switching the attached host's Runtime."
+          ],
+          "description": "How Harnex connects to its Runtime."
+        },
+        "harnex.backend.manifestPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to a trusted domain.json for an explicit attach action. Empty discovers matching running domains when Attach is clicked. This setting never initiates an automatic attach."
+        },
+        "harnex.backend.javaPath": {
+          "type": "string",
+          "default": "",
+          "description": "Development override for the Java executable (Java 17+). Production uses the verified platform Runtime companion."
+        },
+        "harnex.backend.jarPath": {
+          "type": "string",
+          "default": "",
+          "description": "Development override for the Harnex Runtime jar. Production uses the verified platform Runtime companion."
+        },
+        "harnex.backend.jvmArgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "-Xmx1g"
+          ],
+          "description": "Extra JVM arguments for the spawned Runtime."
+        },
+        "harnex.backend.dataDir": {
+          "type": "string",
+          "default": "",
+          "description": "Shared project history directory. Empty uses the registered override or ${workspaceFolder}/.harnex/data. VS Code keeps its private execution state under runtime-stores/vscode-<storage-id> inside this directory."
+        },
+        "harnex.permission.defaultMode": {
+          "type": "string",
+          "enum": [
+            "ask",
+            "accept-edits",
+            "yolo"
+          ],
+          "default": "ask",
+          "description": "Default per-thread permission mode."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "package": "vsce package"
+  },
+  "dependencies": {
+    "dompurify": "^3.4.0",
+    "marked": "^14.1.3"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.9.2",
+    "esbuild": "^0.21.0",
+    "typescript": "^5.4.0"
+  }
+}

@@ -1,0 +1,91 @@
+services:
+  backend:
+    image: ${HARNEX_BACKEND_IMAGE:-harnex-backend:latest}
+    container_name: HARNEX-backend
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 60s
+    # Start without .env; configure model services in the Web UI after startup.
+    # Requires Docker Compose v2.24+ for the optional env_file form.
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # A persistent workspace is provided automatically; host project mounts are optional.
+      - HARNEX_SUPERVISOR_WORKSPACE=/workspace
+      - HARNEX_SUPERVISOR_HOST=0.0.0.0
+      - HARNEX_SUPERVISOR_PORT=8088
+      - HARNEX_USER_DATA_DIR=/root/.harnex
+      - HARNEX_SUPERVISOR_JAVA_XMS=${HARNEX_SUPERVISOR_JAVA_XMS:-64m}
+      - HARNEX_SUPERVISOR_JAVA_XMX=${HARNEX_SUPERVISOR_JAVA_XMX:-512m}
+      - HARNEX_WEB_ORIGIN=${HARNEX_WEB_ORIGIN:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      - OPENAI_DEFAULT_MODEL=${OPENAI_DEFAULT_MODEL:-gpt-4o-mini}
+      - OPENAI_RESPONSES_BASE_URL=${OPENAI_RESPONSES_BASE_URL:-https://api.openai.com/v1}
+      - OPENAI_RESPONSES_DEFAULT_MODEL=${OPENAI_RESPONSES_DEFAULT_MODEL:-gpt-5.1}
+      - MOONSHOT_API_KEY=${MOONSHOT_API_KEY:-}
+      - XAI_API_KEY=${XAI_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - FALLBACK_API_KEY=${FALLBACK_API_KEY:-}
+      - FALLBACK_BASE_URL=${FALLBACK_BASE_URL:-https://api.deepseek.com/v1}
+      - FALLBACK_DEFAULT_MODEL=${FALLBACK_DEFAULT_MODEL:-deepseek-v4-flash}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL:-}
+      - ANTHROPIC_DEFAULT_MODEL=${ANTHROPIC_DEFAULT_MODEL:-claude-opus-4-8}
+      - HARNEX_EXECUTION_ENVIRONMENT=${HARNEX_EXECUTION_ENVIRONMENT:-host}
+      - HARNEX_EXECUTION_SANDBOX_MODE=${HARNEX_EXECUTION_SANDBOX_MODE:-none}
+      - HARNEX_EXECUTION_SANDBOX_NETWORK=${HARNEX_EXECUTION_SANDBOX_NETWORK:-deny}
+      - HARNEX_EXECUTION_IMAGE=${HARNEX_EXECUTION_IMAGE:-debian:stable-slim}
+      - HARNEX_EXECUTION_MEMORY=${HARNEX_EXECUTION_MEMORY:-512m}
+      - HARNEX_EXECUTION_CPUS=${HARNEX_EXECUTION_CPUS:-1}
+      - HARNEX_EXECUTION_PIDS=${HARNEX_EXECUTION_PIDS:-256}
+      # host means this backend container. Nested Docker command execution needs a separately
+      # configured client/daemon and matching host workspace mounts; it is not enabled by Compose.
+      - HARNEX_GATEWAY_SECRET=${HARNEX_GATEWAY_SECRET:-}
+      # Log rotation — daily slice, 5 MB cap per file, 14-day retention, 1 GB total cap.
+      - HARNEX_LOG_LEVEL_ROOT=${HARNEX_LOG_LEVEL_ROOT:-INFO}
+      - HARNEX_LOG_LEVEL_APP=${HARNEX_LOG_LEVEL_APP:-INFO}
+      - HARNEX_LOG_RETENTION_DAYS=${HARNEX_LOG_RETENTION_DAYS:-14}
+      - HARNEX_LOG_TOTAL_SIZE_CAP=${HARNEX_LOG_TOTAL_SIZE_CAP:-1GB}
+    volumes:
+      # Docker manages these volumes; no host directory needs to be configured.
+      # docker-compose.workspace.yml optionally replaces /workspace with an existing project.
+      - HARNEX-workspace:/workspace
+      # User configuration, user Skills, authentication and personal storage survive recreation too.
+      - HARNEX-user:/root/.harnex
+      # Optional sibling-container execution through a deliberately configured Docker daemon.
+      # SECURITY: granting access to /var/run/docker.sock is equivalent to giving the
+      # container root on the host. Off by default. Uncomment ONLY if you actually run
+      # HARNEX_EXECUTION_ENVIRONMENT=docker. Even then prefer rootless docker / a dedicated
+      # docker-in-docker side container over mounting the host socket.
+      # - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "${HARNEX_BIND_ADDRESS:-127.0.0.1}:${HARNEX_BACKEND_PORT:-8088}:8088"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8088/supervisor/api/status"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      # A closed personal/project Runtime is healthy: each starts when its view is opened.
+      start_period: 10s
+
+  frontend:
+    image: ${HARNEX_FRONTEND_IMAGE:-harnex-frontend:latest}
+    container_name: HARNEX-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${HARNEX_BIND_ADDRESS:-127.0.0.1}:${HARNEX_FRONTEND_PORT:-18081}:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  HARNEX-workspace:
+  HARNEX-user:

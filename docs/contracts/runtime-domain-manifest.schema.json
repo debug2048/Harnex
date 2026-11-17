@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://harnex.dev/contracts/runtime-domain-manifest.schema.json",
+  "title": "Harnex Runtime Domain Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runtimeDomainId",
+    "ownerKind",
+    "ownerPid",
+    "ownerInstanceId",
+    "runtimePid",
+    "canonicalRoot",
+    "scopeId",
+    "instanceId",
+    "endpoint",
+    "lifecycle",
+    "protocolVersion",
+    "bootTokenFile",
+    "configRevision",
+    "publishedAt",
+    "runtimeProfile"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 3
+    },
+    "runtimeDomainId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "ownerKind": {
+      "enum": [
+        "web",
+        "tauri",
+        "vscode",
+        "cli",
+        "standalone"
+      ]
+    },
+    "ownerPid": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "ownerInstanceId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "runtimePid": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "canonicalRoot": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "instanceId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "endpoint": {
+      "type": "string",
+      "pattern": "^http://(?:127\\.0\\.0\\.1|\\[::1\\]):[1-9][0-9]{0,4}$"
+    },
+    "lifecycle": {
+      "enum": [
+        "READY"
+      ]
+    },
+    "protocolVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$"
+    },
+    "bootTokenFile": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?:[A-Za-z]:[/\\\\]|/|\\\\\\\\).+"
+    },
+    "configRevision": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "publishedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "scopeId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "runtimeProfile": {
+      "enum": [
+        "PERSONAL",
+        "PROJECT"
+      ]
+    },
+    "authType": {
+      "const": "bearer-json"
+    },
+    "remote": {
+      "type": "object",
+      "required": [
+        "host",
+        "root",
+        "runtimePid",
+        "connectionId"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1
+        },
+        "root": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "runtimePid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "connectionId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "runtimeProfile": {
+            "const": "PERSONAL"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "canonicalRoot": {
+            "type": "null"
+          }
+        },
+        "not": {
+          "required": [
+            "remote"
+          ]
+        }
+      },
+      "else": {
+        "properties": {
+          "canonicalRoot": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "remote"
+        ]
+      },
+      "then": {
+        "required": [
+          "authType"
+        ]
+      }
+    }
+  ]
+}

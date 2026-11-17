@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 3,
+  "runtimeDomainId": "vscode-8eb72c32",
+  "ownerKind": "vscode",
+  "ownerPid": 12000,
+  "ownerInstanceId": "owner-94f7358c",
+  "runtimePid": 12042,
+  "canonicalRoot": "D:/code/example",
+  "instanceId": "runtime-8e6f51a4",
+  "endpoint": "http://127.0.0.1:43117",
+  "lifecycle": "READY",
+  "protocolVersion": "1.0",
+  "bootTokenFile": "D:/Users/example/.harnex/runtime-domains/vscode-8eb72c32/boot-token",
+  "configRevision": "7e6bd0c9",
+  "publishedAt": "2026-08-12T08:00:00.000Z",
+  "runtimeProfile": "PROJECT",
+  "scopeId": "ws-a20b3f"
+}

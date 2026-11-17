@@ -1,0 +1,55 @@
+name: Complete multiplatform release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag whose missing native assets should be added
+        required: true
+        default: v1.0.0
+        type: string
+      build_run_ids:
+        description: Native build run IDs, comma separated; selected platform jobs must have passed
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: complete-release-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  complete:
+    name: Verify all five platforms and update release
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: .ci
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify source, existing assets and new platform builds
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          BUILD_RUN_IDS: ${{ inputs.build_run_ids }}
+        run: node .ci/.github/scripts/complete-release.mjs
+      - name: Upload verification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-verification-${{ inputs.tag }}
+          path: release-work/verification.json
+          if-no-files-found: ignore
+          retention-days: 30

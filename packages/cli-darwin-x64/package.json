@@ -1,0 +1,9 @@
+{
+  "name": "@harnex/cli-darwin-x64",
+  "version": "1.0.0",
+  "description": "Harnex native CLI/TUI for macOS Intel",
+  "license": "Apache-2.0",
+  "os": ["darwin"],
+  "cpu": ["x64"],
+  "files": ["bin/harnex", "README.md", "LICENSE"]
+}

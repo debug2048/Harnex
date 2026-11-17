@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capability for the trusted bundled Harnex SPA. Workspace lifecycle uses app-defined commands; no filesystem or shell plugin API is exposed.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

@@ -1,0 +1,81 @@
+{
+  "name": "harnex",
+  "version": "1.0.0",
+  "description": "Harnex — a workspace-centered AI agent runtime for Web, desktop, terminal and VS Code.",
+  "type": "module",
+  "bin": {
+    "harnex": "./bin/harnex.mjs"
+  },
+  "scripts": {
+    "postinstall": "node ./bin/postinstall.mjs",
+    "build": "node ./scripts/build/build.mjs",
+    "brand:generate": "node ./scripts/build/brand.mjs",
+    "build:dist": "node ./scripts/build/build-dist.mjs",
+    "build:dist:check": "node ./scripts/build/build-dist.mjs --check",
+    "build:release-assets": "node ./scripts/build/release-assets.mjs",
+    "build:clean": "node ./scripts/build/build.mjs --clean",
+    "build:desktop": "node ./scripts/build/desktop.mjs",
+    "build:desktop:updater": "node ./scripts/build/desktop.mjs --updater",
+    "build:desktop:debug": "node ./scripts/build/desktop.mjs --debug",
+    "build:desktop:check": "node ./scripts/build/desktop.mjs --check",
+    "build:desktop:macos:release": "node ./scripts/build/desktop.mjs --macos-release --updater",
+    "build:native-cli": "node ./scripts/build/native-cli.mjs",
+    "build:runtime": "npm run build:native-cli && node ./scripts/build/runtime-bundle.mjs --with-native-cli",
+    "build:runtime:companion": "npm run build:native-cli && node ./scripts/build/runtime-bundle.mjs --with-native-cli --stage-companion",
+    "build:offline": "node ./scripts/build/offline-kit.mjs",
+    "dev:desktop": "node ./scripts/build/desktop.mjs --dev",
+    "pack:dry": "node ./scripts/build/build.mjs --dry-run",
+    "release": "node ./scripts/build/build.mjs --publish",
+    "release:patch": "node ./scripts/build/build.mjs --version patch --publish",
+    "release:minor": "node ./scripts/build/build.mjs --version minor --publish",
+    "start": "node ./bin/harnex.mjs serve",
+    "cli": "node ./bin/harnex.mjs cli",
+    "tui": "node ./bin/harnex.mjs tui",
+    "stop": "node ./bin/harnex.mjs stop",
+    "dev": "node ./scripts/dev/dev.mjs",
+    "dev:supervisor": "node ./scripts/dev/dev.mjs --supervisor",
+    "dev:stop": "node ./scripts/dev/dev.mjs --stop"
+  },
+  "files": [
+    "bin/harnex.mjs",
+    "bin/postinstall.mjs",
+    "bin/lib/",
+    "bin/assets/",
+    "backend/target/harnex-*.jar",
+    "frontend/dist/",
+    "docs/06_用户手册.md",
+    "docs/04_部署方案.md",
+    "docs/licenses/ripgrep-MIT.txt",
+    "README.md",
+    "README.zh-CN.md",
+    "docs/en/",
+    "docs/assets/brand/logo-light.svg",
+    "docs/assets/brand/logo-dark.svg",
+    "docs/assets/screenshots/",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "optionalDependencies": {
+    "@harnex/cli-darwin-arm64": "1.0.0",
+    "@harnex/cli-darwin-x64": "1.0.0",
+    "@harnex/cli-linux-arm64": "1.0.0",
+    "@harnex/cli-linux-x64": "1.0.0",
+    "@harnex/cli-win32-x64": "1.0.0"
+  },
+  "keywords": [
+    "agent",
+    "llm",
+    "harness",
+    "tui",
+    "cli",
+    "ai",
+    "workspace",
+    "openai-compatible",
+    "tool-use"
+  ],
+  "license": "Apache-2.0",
+  "preferGlobal": true,
+  "packageManager": "npm@10.9.4"
+}

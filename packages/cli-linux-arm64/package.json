@@ -1,0 +1,9 @@
+{
+  "name": "@harnex/cli-linux-arm64",
+  "version": "1.0.0",
+  "description": "Harnex native CLI/TUI and SSH connection host for Linux arm64",
+  "license": "Apache-2.0",
+  "os": ["linux"],
+  "cpu": ["arm64"],
+  "files": ["bin/harnex", "README.md", "LICENSE"]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "@harnex/cli-darwin-arm64",
+  "version": "1.0.0",
+  "description": "Harnex native CLI/TUI for macOS Apple Silicon",
+  "license": "Apache-2.0",
+  "os": ["darwin"],
+  "cpu": ["arm64"],
+  "files": ["bin/harnex", "README.md", "LICENSE"]
+}

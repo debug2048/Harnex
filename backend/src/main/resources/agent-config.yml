@@ -1,0 +1,1332 @@
+# Harnex agent configuration. Override ${ENV} with real env vars in production.
+harnex:
+  # Schema version. Bump in lock-step with the binary's
+  # ConfigMigrator.CURRENT_SCHEMA_VERSION whenever a breaking change lands.
+  version: 1
+  # Project data follows the project disk; relative paths are anchored at the project root.
+  # PERSONAL Runtime uses <user-data-dir>/personal independently of this project setting.
+  data-dir: .harnex/data
+  skills-dir: .harnex/skills
+  max-iterations: 200
+  # Top-level interactive chat only. Goal/sub-agent loops retain their independent max-iterations budgets.
+  ordinary-max-iterations: 64
+  finalization-grace-iterations: 2
+  # Lifetime of one SSE subscription, not of the Run. Clients resume with afterSeq after timeout.
+  sse-timeout-ms: 3600000
+  tool-parallelism: 8
+
+  # Egress proxy (VSCode-style single URL). Leave commented for direct connections.
+  # Per-provider `proxy:` below takes precedence; built-in bypass already covers
+  # loopback / RFC1918 / *.local / *.internal / *.corp. See docs/04 §11a for details.
+  # http:
+  #   proxy: ${HARNEX_HTTP_PROXY:}            # http://user:pass@host:port | socks5://... | off
+  #   proxy-support: fallback                # on | off | fallback (probe baseUrl first, 3s)
+  #   proxy-bypass:
+  #     - "*.internal"
+
+  # Native attachments — when enabled, declared image/file/PDF uploads use each API's own typed
+  # content blocks. Known official models require BOTH vendor support and this endpoint model's exact
+  # input-modalities declaration. For unknown/custom relay ids, that exact declaration is the operator's explicit
+  # capability override; otherwise attachments degrade to a visible file_read/OCR hint.
+  # Set enabled:false to force local Tika sidecars + file_read for every attachment.
+  vision:
+    enabled: ${HARNEX_VISION_ENABLED:true}
+    max-attachment-bytes: 10485760     # 10 MB hard cap per inline attachment
+    detail: auto                  # auto | low | high | original (OpenAI vision detail hint)
+    max-attachments-per-message: 8
+    # Server-side OCR fallback for non-vision models: when true, file_read can OCR an
+    # uploaded image on demand via Tika+Tesseract and cache the recognised text in a
+    # sidecar `<name>.extracted.txt`. Native-capable models receive the original image
+    # without paying this OCR cost. Requires `tesseract` on PATH; if it is missing the
+    # upload still succeeds and the original remains available to native vision models.
+    ocr-fallback: ${HARNEX_OCR_FALLBACK:true}
+    ocr-language: ${HARNEX_OCR_LANG:eng+chi_sim}
+    ocr-timeout-ms: 60000
+    ocr-command: 'tesseract "{file}" - -l eng+chi_sim'
+
+  # Optional third-party web_search tool. Advertised only when enabled and the selected backend is configured.
+  # Configure/test it in Settings → Web search, or set the environment variables below.
+  # Repeated terminal errors open the runtime circuit breaker; health is visible via self_inspect / doctor.
+  web-search:
+    enabled: ${HARNEX_WEBSEARCH_ENABLED:false}
+    # Backend: tavily | exa | brave | searxng | perplexity | anysearch | tinyfish. Only the named backend is invoked.
+    #   All hosted backends require api-key. searxng → KEYLESS, set endpoint to your instance.
+    provider: ${HARNEX_WEBSEARCH_PROVIDER:tavily}
+    api-key: ${HARNEX_WEBSEARCH_KEY:}                # blank => tool not advertised (searxng ignores this)
+    endpoint: ${HARNEX_WEBSEARCH_ENDPOINT:}          # blank => backend default; REQUIRED for searxng (e.g. http://localhost:8888)
+    max-results: 10
+    language: ""                                   # AnySearch/TinyFish: optional language (e.g. zh or en); blank=service default
+    timeout-ms: 15000
+    circuit-threshold: 3                            # consecutive terminal failures before the breaker opens
+    circuit-cooldown-ms: 600000                     # 10 min fast-fail window once open
+
+  # ask_user tool — lets the agent ask the user a clarifying question with optional suggested
+  # options. Anti-nag by design: the prompt steers the model to ask only for direction/scope
+  # changes, irreversible actions, or missing un-inferable info; max-per-turn caps how many
+  # questions a single user turn may raise. Headless/cron runs return a "proceed" sentinel
+  # immediately (never block). timeout-ms bounds the interactive wait.
+  ask:
+    timeout-ms: 1800000      # 30 min wait for an answer before returning the proceed sentinel
+    max-per-turn: 2          # anti-nag: excess ask_user calls in one turn short-circuit
+
+  # Autonomous goal (/goal) guard rails. A goal auto-continues across turns until the model
+  # verifies it complete / blocked, or an explicitly configured cap trips. All Goal budgets default
+  # to 0 (unlimited); token budgets can also be set per-goal via "/goal … +500k".
+  goal:
+    max-turns: ${HARNEX_GOAL_MAX_TURNS:0}                  # 0 = unlimited; only explicit budgets stop continuation
+    default-token-budget: ${HARNEX_GOAL_TOKEN_BUDGET:0}     # 0 = unlimited unless /goal … +budget is given
+    wall-clock-budget-ms: ${HARNEX_GOAL_WALLCLOCK_MS:0}     # 0 = unlimited
+
+  # /plan review gate. submit_plan suspends the agent until the user approves/rejects over
+  # POST /api/plan-review/...; this bounds that wait so an abandoned review can't pin a worker.
+  # Headless callers (no SSE emitter) auto-approve and never wait.
+  plan:
+    review-timeout-ms: ${HARNEX_PLAN_REVIEW_TIMEOUT_MS:1800000}   # 30 min
+
+  # Snapshot / undo insurance. Conversation snapshots are content-addressed manifests;
+  # file rollback captures selective before-blobs for files touched by write tools / git diff.
+  # Whole-project archive rollback has been removed; these knobs control the new file-level path.
+  snapshot:
+    conversation: ${HARNEX_SNAPSHOT_CONVERSATION:true}
+    file-rollback: ${HARNEX_SNAPSHOT_FILE_ROLLBACK:true}
+    # When true, file_write fails if it cannot capture a rollback blob for an existing target.
+    # Default false keeps compatibility with large / excluded / binary-heavy workspaces.
+    strict-capture-for-writes: ${HARNEX_SNAPSHOT_STRICT_CAPTURE_FOR_WRITES:false}
+    respect-gitignore: ${HARNEX_SNAPSHOT_RESPECT_GITIGNORE:true}
+    max-file-bytes: ${HARNEX_SNAPSHOT_MAX_FILE_BYTES:5242880}                 # 5 MB per file blob
+    max-files-per-snapshot: ${HARNEX_SNAPSHOT_MAX_FILES_PER_SNAPSHOT:200}
+    capture-timeout-ms: ${HARNEX_SNAPSHOT_CAPTURE_TIMEOUT_MS:1500}
+    git-timeout-ms: ${HARNEX_SNAPSHOT_GIT_TIMEOUT_MS:2000}
+    max-snapshots-per-thread: ${HARNEX_SNAPSHOT_MAX_SNAPSHOTS_PER_THREAD:20}
+    total-disk-budget-bytes: ${HARNEX_SNAPSHOT_TOTAL_DISK_BUDGET_BYTES:268435456} # 256 MiB
+    protect-globs:
+      - ".env"
+      - ".env.*"
+      - "config/**/*.yml"
+      - "config/**/*.yaml"
+    exclude-globs:
+      - "**/node_modules/**"
+      - "**/.git/**"
+      - "**/target/**"
+      - "**/build/**"
+      - "**/dist/**"
+      - "**/.gradle/**"
+      - "**/.idea/**"
+      - "**/.vscode/**"
+      - "**/__pycache__/**"
+      - "**/.venv/**"
+      - "**/venv/**"
+      - "**/.next/**"
+      - "**/.cache/**"
+      - "**/*.log"
+      - "**/*.tmp"
+      - "**/*.pyc"
+      - "**/*.class"
+
+  # User-facing BYOK providers. A higher-precedence user/project YAML that declares `providers` replaces this whole
+  # concrete Map; list every endpoint that file should expose. It does not inherit entries, fields, or model lists
+  # from this built-in Map. Command-line/environment values may still override fields at their normal precedence.
+  # A provider selects exactly one profile.
+  # The profile owns adapter/wire behaviour and may provide safe official endpoint/default-model plus an internal
+  # capability/suggestion catalogue. This block owns the key, user intent, and the endpoint's selectable models.
+  # Omitting `models` exposes only `default-model`; an explicit list exposes only that subset (the default is
+  # automatically included). Same-id entries inherit verified metadata/capabilities from the selected profile.
+  # Provider/profile ids match [A-Za-z0-9][A-Za-z0-9_-]{0,63}; put human display text in `label`.
+  # openai-compatible requires a final base-url; openai-responses/anthropic/gemini may use official defaults.
+  #
+  # providers:
+  #   my-openai:
+  #     profile: openai-responses
+  #     base-url: https://api.openai.com/v1
+  #     api-key: ${OPENAI_API_KEY:}
+  #     default-model: <current-model-id>
+  #   my-qwen:
+  #     profile: dashscope-qwen-chat
+  #     api-key: ${DASHSCOPE_API_KEY:}
+  #     default-model: <current-model-id>
+  #
+  # Unknown models remain conservative. Native attachment support requires verified exact metadata from the profile
+  # catalogue or an endpoint `models` entry with input-modalities.
+
+  # Maintainer layer. A profile is an adapter/wire template and can include safe official defaults.
+  # Resolution composes the protocol/profile baseline, the first profile-local full-match rule, then
+  # the exact model overlay. Official snapshot patterns are opt-in per profile. A relay alias can
+  # explicitly name a canonical `capability-model`; attachment modalities remain exact-model-only.
+  # Keep custom endpoints conservative until their contract is verified. Profile keys use the same
+  # stable-id grammar as providers: [A-Za-z0-9][A-Za-z0-9_-]{0,63}.
+  provider-profiles:
+    # Official OpenAI Chat Completions. The base keeps GPT-4o-compatible sampling; reasoning-model
+    # overlays replace the token/role/sampling contract. Tools and effort remain separate declared
+    # capabilities. Tools/effort constraints are scoped to verified model IDs, not future releases.
+    openai-chat:
+      label: openai-chat
+      type: openai-compatible
+      instruction-role: system
+      max-tokens-field: max_tokens
+      streaming: true
+      stream-usage: true
+      function-tools: true
+      sampling-policy: always
+      reasoning-efforts: []
+      reasoning-replay: never
+      prompt-cache-mode: key
+      prompt-cache-key: true
+      prompt-cache-explicit: true
+      model-capability-rules:
+        # Terra accepts none, but all function tools still require Responses (2026-11-02).
+        # https://developers.openai.com/api/docs/models/gpt-6.1-terra
+        - match: 'gpt-6\.1-terra'
+          capabilities:
+            instruction-role: developer
+            max-tokens-field: max_completion_tokens
+            function-tools: false
+            sampling-policy: omit
+            reasoning-efforts: [none, low, medium, high, xhigh, max]
+            prompt-cache-mode: openai_explicit
+        # Verified 2026-10-07: https://developers.openai.com/api/docs/guides/latest-model
+        # Astra and 6.1 Sol require Responses for tools and never accept none/minimal effort.
+        - match: 'gpt-(?:6-astra|6\.1-sol)'
+          capabilities:
+            instruction-role: developer
+            max-tokens-field: max_completion_tokens
+            function-tools: false
+            sampling-policy: omit
+            reasoning-efforts: [low, medium, high, xhigh, max]
+            prompt-cache-mode: openai_explicit
+        # GPT-6 Sol/Luna and current GPT-5.6 Sol aliases require none when Chat tools are present.
+        - match: 'gpt-(?:6-(?:sol|luna)|5\.6(?:-sol)?)'
+          capabilities:
+            instruction-role: developer
+            max-tokens-field: max_completion_tokens
+            sampling-policy: omit
+            reasoning-efforts: [none, low, medium, high, xhigh, max]
+            function-tool-reasoning-effort: none
+            prompt-cache-mode: openai_explicit
+        # Future/date snapshots get the family contract but no Sol-only workaround until their endpoint is verified.
+        - match: 'gpt-5\.6(?:-(?:sol|terra|luna))?(?:-\d{4}-\d{2}-\d{2})?'
+          capabilities:
+            instruction-role: developer
+            max-tokens-field: max_completion_tokens
+            sampling-policy: omit
+            reasoning-efforts: [none, low, medium, high, xhigh, max]
+            prompt-cache-mode: openai_explicit
+        - match: 'gpt-5\.5(?:-\d{4}-\d{2}-\d{2})?'
+          capabilities:
+            instruction-role: developer
+            max-tokens-field: max_completion_tokens
+            sampling-policy: omit
+            reasoning-efforts: [none, low, medium, high, xhigh]
+        - match: 'o3-mini(?:-\d{4}-\d{2}-\d{2})?'
+          capabilities:
+            instruction-role: developer
+            max-tokens-field: max_completion_tokens
+            sampling-policy: omit
+            reasoning-efforts: [low, medium, high]
+      models:
+        - { id: gpt-6-astra, context-window: 1050000, label: "GPT-6 Astra (Chat only)", tier: high, description: "Use openai-responses for Agent tools", input-modalities: [text, image] }
+        - { id: gpt-6.1-sol, context-window: 1050000, label: "GPT-6.1 Sol (Chat only)", tier: high, description: "Use openai-responses for Agent tools", input-modalities: [text, image] }
+        - { id: gpt-6.1-terra, context-window: 1050000, label: "GPT-6.1 Terra (Chat only)", tier: medium, description: "Use openai-responses for Agent tools", input-modalities: [text, image] }
+        - { id: gpt-6-sol, context-window: 1050000, label: "GPT-6 Sol", tier: high, description: "Chat tools require effort=none; use openai-responses for reasoning with tools", input-modalities: [text, image] }
+        - { id: gpt-6-luna, context-window: 1050000, label: "GPT-6 Luna", tier: low, description: "Chat tools require effort=none; use openai-responses for reasoning with tools", input-modalities: [text, image] }
+        - { id: gpt-5.6, context-window: 1050000 }
+        - { id: gpt-5.6-sol, context-window: 1050000 }
+        - { id: gpt-5.6-terra, context-window: 1050000 }
+        - { id: gpt-5.6-luna, context-window: 1050000 }
+        - { id: gpt-5.5, context-window: 1050000 }
+        - { id: gpt-5.1, context-window: 400000 }
+        - { id: gpt-4o, context-window: 128000 }
+        - { id: gpt-4o-mini, context-window: 128000 }
+        - { id: o3-mini, context-window: 200000 }
+
+    # Official OpenAI Responses API. Reasoning output items are replayed natively (including
+    # encrypted reasoning content); GPT-5.6/6/6.1 opt into explicit stable-prefix breakpoints.
+    openai-responses:
+      label: openai-responses
+      type: openai-responses
+      max-tokens-field: max_output_tokens
+      streaming: true
+      function-tools: true
+      sampling-policy: omit
+      reasoning-efforts: []
+      reasoning-replay: native_items
+      prompt-cache-mode: key
+      prompt-cache-key: true
+      prompt-cache-explicit: true
+      model-capability-rules:
+        - match: 'gpt-6\.1-terra'
+          capabilities:
+            reasoning-efforts: [none, low, medium, high, xhigh, max]
+            prompt-cache-mode: openai_explicit
+            native-web-search: true
+            native-web-search-type: web_search
+        - match: 'gpt-(?:6-astra|6\.1-sol)'
+          capabilities:
+            reasoning-efforts: [low, medium, high, xhigh, max]
+            prompt-cache-mode: openai_explicit
+            native-web-search: true
+            native-web-search-type: web_search
+        # GPT-5.5 Pro is Responses/Batch-only and does not support streaming.
+        - match: 'gpt-5\.5-pro(?:-\d{4}-\d{2}-\d{2})?'
+          capabilities:
+            streaming: false
+            reasoning-efforts: [medium, high, xhigh]
+            # Official pricing offers no cached-input discount for Pro; do not imply cache savings.
+            prompt-cache-mode: none
+            native-web-search: true
+            native-web-search-type: web_search
+        - match: '(?:gpt-6-(?:sol|luna)|gpt-5\.6(?:-(?:sol|terra|luna))?(?:-\d{4}-\d{2}-\d{2})?)'
+          capabilities:
+            reasoning-efforts: [none, low, medium, high, xhigh, max]
+            prompt-cache-mode: openai_explicit
+            native-web-search: true
+            native-web-search-type: web_search
+        - match: 'gpt-5\.5(?:-\d{4}-\d{2}-\d{2})?'
+          capabilities:
+            reasoning-efforts: [none, low, medium, high, xhigh]
+            native-web-search: true
+            native-web-search-type: web_search
+        - match: 'gpt-5\.1(?:-\d{4}-\d{2}-\d{2})?'
+          capabilities:
+            reasoning-efforts: [none, low, medium, high]
+            native-web-search: true
+            native-web-search-type: web_search
+      models:
+        - { id: gpt-6-astra, context-window: 1050000, label: "GPT-6 Astra", tier: high, input-modalities: [text, image, file] }
+        - { id: gpt-6.1-sol, context-window: 1050000, label: "GPT-6.1 Sol", tier: high, input-modalities: [text, image, file] }
+        - { id: gpt-6.1-terra, context-window: 1050000, label: "GPT-6.1 Terra", tier: medium, input-modalities: [text, image, file] }
+        - { id: gpt-6-sol, context-window: 1050000, label: "GPT-6 Sol", tier: high, input-modalities: [text, image, file] }
+        - { id: gpt-6-luna, context-window: 1050000, label: "GPT-6 Luna", tier: low, input-modalities: [text, image, file] }
+        - { id: gpt-5.6, context-window: 1050000 }
+        - { id: gpt-5.6-sol, context-window: 1050000 }
+        - { id: gpt-5.6-terra, context-window: 1050000 }
+        - { id: gpt-5.6-luna, context-window: 1050000 }
+        - { id: gpt-5.5, context-window: 1050000 }
+        - { id: gpt-5.1, context-window: 400000 }
+        - { id: gpt-4o, context-window: 128000 }
+        - { id: gpt-4o-mini, context-window: 128000 }
+        - { id: o3-mini, context-window: 200000 }
+
+    # Native Anthropic Messages API. Official endpoint defaults and the internal capability/suggestion catalogue live
+    # in this vendor-specific template; ordered rules own model-family wire differences while exact models only declare
+    # presentation metadata and verified attachment modalities.
+    anthropic-messages:
+      label: anthropic-messages
+      type: anthropic
+      base-url: https://api.anthropic.com
+      default-model: claude-opus-4-8
+      max-tokens-field: max_tokens
+      streaming: true
+      function-tools: true
+      sampling-policy: when_thinking_off
+      reasoning-efforts: []
+      reasoning-replay: native_items
+      prompt-cache-mode: content_cache_control
+      strict-terminal: false
+      model-capability-rules:
+        # https://platform.claude.com/docs/en/models/opus-5-5/migration-guide
+        - match: 'claude-(?:(?:fable|mythos)-5-1|opus-5-5)'
+          capabilities:
+            default-max-tokens: 64000
+            strict-terminal: true
+            sampling-policy: omit
+            reasoning-efforts: [low, medium, high, xhigh, max]
+            native-web-search: true
+            native-web-search-type: web_search_20260318
+            thinking:
+              field: thinking
+              default-state: always_on
+              enabled-object: { type: adaptive }
+              send-default: false
+        # Haiku 5.5 shares this thinking/effort contract, not Haiku 4.5's legacy behavior.
+        # https://platform.claude.com/docs/en/models/haiku-5-5/migration-guide
+        - match: 'claude-(?:opus-5|haiku-5-5)'
+          capabilities:
+            default-max-tokens: 64000
+            strict-terminal: true
+            sampling-policy: omit
+            reasoning-efforts: [low, medium, high, xhigh, max]
+            thinking-required-efforts: [xhigh, max]
+            native-web-search: true
+            native-web-search-type: web_search_20260318
+            thinking:
+              field: thinking
+              default-state: "on"
+              enabled-object: { type: adaptive }
+              disabled-object: { type: disabled }
+              send-default: false
+        - match: 'claude-(?:fable|mythos)-5'
+          capabilities:
+            default-max-tokens: 64000
+            strict-terminal: true
+            sampling-policy: omit
+            reasoning-efforts: [low, medium, high, xhigh, max]
+            native-web-search: true
+            native-web-search-type: web_search_20260318
+            thinking:
+              field: thinking
+              default-state: always_on
+              enabled-object: { type: adaptive }
+              send-default: false
+        - match: 'claude-opus-4-(?:8|7)'
+          capabilities:
+            default-max-tokens: 64000
+            strict-terminal: true
+            sampling-policy: omit
+            reasoning-efforts: [low, medium, high, xhigh, max]
+            native-web-search: true
+            native-web-search-type: web_search_20260318
+            thinking:
+              field: thinking
+              default-state: "off"
+              enabled-object: { type: adaptive }
+              disabled-object: { type: disabled }
+              send-default: false
+        # 5.5 disables up-front thinking with between_tools; high efforts require adaptive thinking.
+        # https://platform.claude.com/docs/en/models/sonnet-5-5/whats-new-sonnet-5-5
+        - match: 'claude-sonnet-5-5'
+          capabilities:
+            default-max-tokens: 64000
+            strict-terminal: true
+            sampling-policy: omit
+            reasoning-efforts: [low, medium, high, xhigh, max]
+            thinking-required-efforts: [xhigh, max]
+            native-web-search: true
+            native-web-search-type: web_search_20260318
+            thinking:
+              field: thinking
+              default-state: "on"
+              enabled-object: { type: adaptive }
+              disabled-object: { type: between_tools }
+              send-default: false
+        - match: 'claude-sonnet-5'
+          capabilities:
+            default-max-tokens: 64000
+            strict-terminal: true
+            sampling-policy: omit
+            reasoning-efforts: [low, medium, high, xhigh, max]
+            native-web-search: true
+            native-web-search-type: web_search_20260318
+            thinking:
+              field: thinking
+              default-state: "on"
+              enabled-object: { type: adaptive }
+              disabled-object: { type: disabled }
+              send-default: false
+        - match: 'claude-(?:sonnet|opus)-4-6'
+          capabilities:
+            default-max-tokens: 64000
+            strict-terminal: true
+            sampling-policy: when_thinking_off
+            reasoning-efforts: [low, medium, high, max]
+            native-web-search: true
+            native-web-search-type: web_search_20260318
+            thinking:
+              field: thinking
+              default-state: "off"
+              enabled-object: { type: adaptive }
+              disabled-object: { type: disabled }
+              send-default: false
+        - match: 'claude-haiku-4-5(?:-20251001)?'
+          capabilities:
+            default-max-tokens: 64000
+            strict-terminal: true
+            sampling-policy: always
+            reasoning-efforts: []
+      models:
+        - { id: claude-fable-5-1, context-window: 1000000, label: "Claude Fable 5.1", tier: high, input-modalities: [text, image, pdf] }
+        - { id: claude-mythos-5-1, context-window: 1000000, label: "Claude Mythos 5.1", tier: high, description: "Restricted availability", input-modalities: [text, image, pdf] }
+        - { id: claude-opus-5-5, context-window: 1000000, label: "Claude Opus 5.5", tier: high, input-modalities: [text, image, pdf] }
+        - { id: claude-sonnet-5-5, context-window: 1000000, label: "Claude Sonnet 5.5", tier: medium, input-modalities: [text, image, pdf] }
+        - { id: claude-haiku-5-5, context-window: 1000000, label: "Claude Haiku 5.5", tier: low, input-modalities: [text, image, pdf] }
+        - { id: claude-opus-5, context-window: 1000000, label: "Claude Opus 5", tier: high, input-modalities: [text, image, pdf] }
+        - { id: claude-fable-5, context-window: 1000000, label: "Claude Fable 5", tier: high, description: "maximum-capability Claude", input-modalities: [text, image, pdf] }
+        - { id: claude-mythos-5, context-window: 1000000, label: "Claude Mythos 5", tier: high, input-modalities: [text, image, pdf] }
+        - { id: claude-opus-4-8, context-window: 1000000, label: "Claude Opus 4.8", tier: high, input-modalities: [text, image, pdf] }
+        - { id: claude-opus-4-7, context-window: 1000000, label: "Claude Opus 4.7", tier: high, input-modalities: [text, image, pdf] }
+        - { id: claude-sonnet-5, context-window: 1000000, label: "Claude Sonnet 5", tier: medium, input-modalities: [text, image, pdf] }
+        - { id: claude-sonnet-4-6, context-window: 1000000, label: "Claude Sonnet 4.6", tier: medium, input-modalities: [text, image, pdf] }
+        - { id: claude-opus-4-6, context-window: 1000000, label: "Claude Opus 4.6", tier: high, input-modalities: [text, image, pdf] }
+        - { id: claude-haiku-4-5, context-window: 200000, label: "Claude Haiku 4.5", tier: low, input-modalities: [text, image, pdf] }
+        - { id: claude-haiku-4-5-20251001, context-window: 200000, label: "Claude Haiku 4.5 (20251001)", tier: low, input-modalities: [text, image, pdf] }
+
+    # DeepSeek Chat API. Current Flash aliases and V4 Pro require complete thinking replay.
+    # Pin legacy snapshot contracts separately; never apply current-alias behavior by a broad V4 prefix.
+    deepseek-v4:
+      output-reserve-tokens: 65536
+      label: deepseek
+      type: openai-compatible
+      instruction-role: system
+      max-tokens-field: max_tokens
+      streaming: true
+      stream-usage: true
+      function-tools: true
+      sampling-policy: omit
+      reasoning-efforts: [high, max]
+      reasoning-replay: tool_calls
+      prompt-cache-mode: auto_prefix
+      thinking:
+        field: thinking
+        default-state: "on"
+        enabled-object: { type: enabled }
+        disabled-object: { type: disabled }
+        send-default: false
+      model-capability-rules:
+        # Current Pro also requires reasoning from assistant answers that did not call a tool.
+        # https://api-docs.deepseek.com/guides/thinking_mode/
+        - match: 'deepseek-v4-pro'
+          capabilities:
+            reasoning-replay: all
+            reasoning-history: required
+        - match: 'deepseek-(?:flash|v4-flash(?:-vision-exp)?)'
+          capabilities:
+            reasoning-efforts: [low, high, max]
+            reasoning-replay: all
+            reasoning-history: required
+      models:
+        - { id: deepseek-v4-pro, context-window: 1000000 }
+        - { id: deepseek-flash, context-window: 1000000, label: "DeepSeek V4.1 Flash", tier: medium, input-modalities: [text, image] }
+        - { id: deepseek-v4-flash, context-window: 1000000, label: "DeepSeek Flash (legacy alias)", tier: medium, input-modalities: [text, image] }
+        - { id: deepseek-v4-flash-vision-exp, context-window: 1000000, label: "DeepSeek Flash (legacy vision alias)", tier: medium, input-modalities: [text, image] }
+
+    # Moonshot's official Chat endpoint. Model rules own the K2.7/K3/K3.1 thinking, effort and output defaults;
+    # users select one endpoint profile and can switch either exact model without changing wire settings.
+    moonshot-kimi-chat:
+      label: kimi
+      type: openai-compatible
+      base-url: https://api.moonshot.cn/v1
+      default-model: kimi-k3
+      instruction-role: system
+      max-tokens-field: max_completion_tokens
+      streaming: true
+      stream-usage: true
+      function-tools: true
+      sampling-policy: omit
+      reasoning-efforts: []
+      reasoning-replay: never
+      prompt-cache-mode: key
+      prompt-cache-key: true
+      model-capability-rules:
+        # K3.x always thinks via reasoning_effort; it does not use K2.x's thinking.type/keep fields.
+        # https://platform.kimi.ai/docs/guide/kimi-k3-1-pro-quickstart
+        - match: 'kimi-k3(?:\.1-pro(?:-highspeed)?)?'
+          capabilities:
+            output-reserve-tokens: 131072
+            reasoning-efforts: [low, high, max]
+            reasoning-replay: all
+            reasoning-history: required
+        - match: 'kimi-k2\.7-code(?:-highspeed)?'
+          capabilities:
+            output-reserve-tokens: 32768
+            reasoning-efforts: []
+            reasoning-replay: all
+            reasoning-history: required
+            thinking:
+              field: thinking
+              default-state: always_on
+              enabled-object: { type: enabled, keep: all }
+              send-default: true
+      models:
+        - { id: kimi-k3.1-pro, context-window: 1048576, label: "Kimi K3.1 Pro", tier: high, input-modalities: [text, image, video] }
+        - { id: kimi-k3.1-pro-highspeed, context-window: 1048576, label: "Kimi K3.1 Pro Highspeed", tier: high, input-modalities: [text, image, video] }
+        - { id: kimi-k3, context-window: 1048576, label: "Kimi K3", tier: high, input-modalities: [text, image, video] }
+        - { id: kimi-k2.7-code, context-window: 262144, label: "Kimi K2.7 Code", tier: high, input-modalities: [text, image, video] }
+        - { id: kimi-k2.7-code-highspeed, context-window: 262144, label: "Kimi K2.7 Code Highspeed", tier: high, input-modalities: [text, image, video] }
+
+    # xAI's current frontier Grok exposes the Responses API, encrypted reasoning continuation,
+    # function tools, server-side web search and prompt-cache-key sticky routing.
+    xai-responses-grok45:
+      label: grok
+      type: openai-responses
+      base-url: https://api.x.ai/v1
+      default-model: grok-4.5
+      max-tokens-field: max_output_tokens
+      streaming: true
+      function-tools: true
+      sampling-policy: omit
+      reasoning-efforts: [low, medium, high]
+      reasoning-replay: native_items
+      prompt-cache-mode: key
+      prompt-cache-key: true
+      native-web-search: true
+      native-web-search-type: web_search
+      model-capability-rules:
+        # https://docs.x.ai/developers/grok-4-7
+        - match: 'grok-4\.(?:6|7)'
+          capabilities:
+            reasoning-efforts: [low, medium, high, xhigh]
+      models:
+        - { id: grok-4.7, context-window: 500000, label: "Grok 4.7", tier: high, input-modalities: [text, image] }
+        - { id: grok-4.6, context-window: 500000, label: "Grok 4.6", tier: high, input-modalities: [text, image] }
+        - { id: grok-4.5, context-window: 500000, label: "Grok 4.5", tier: high, input-modalities: [text, image] }
+        - { id: grok-4.5-latest, context-window: 500000, label: "Grok 4.5 Latest", tier: high, input-modalities: [text, image] }
+        - { id: grok-build-latest, context-window: 500000, label: "Grok Build Latest", tier: high, input-modalities: [text, image] }
+
+    # Native Google Gemini Interactions API. Stateless native-step replay preserves thought and
+    # built-in-tool signatures; exact model entries are the only source of attachment enablement.
+    gemini-interactions:
+      label: gemini
+      type: gemini
+      base-url: https://generativelanguage.googleapis.com
+      default-model: gemini-3.6-flash
+      max-tokens-field: max_output_tokens
+      streaming: true
+      function-tools: true
+      sampling-policy: omit
+      reasoning-efforts: []
+      reasoning-replay: native_items
+      prompt-cache-mode: auto_prefix
+      model-capability-rules:
+        # Standard stateless Interactions. Background long decode is a separate API lifecycle.
+        # https://ai.google.dev/gemini-api/docs/models/gemini-4-argon
+        - match: 'gemini-4-argon'
+          capabilities:
+            output-reserve-tokens: 65536
+            reasoning-efforts: [low, medium, high]
+            native-web-search: true
+            native-web-search-type: google_search
+        # New Flash releases reject minimal; do not narrow the existing 3.5/3.6 contracts.
+        - match: 'gemini-3\.(?:7|8)-flash'
+          capabilities:
+            output-reserve-tokens: 65536
+            reasoning-efforts: [low, medium, high]
+            native-web-search: true
+            native-web-search-type: google_search
+        - match: 'gemini-(?:3\.6|3\.5)-(?:flash|flash-lite)'
+          capabilities:
+            reasoning-efforts: [minimal, low, medium, high]
+            native-web-search: true
+            native-web-search-type: google_search
+        - match: 'gemini-(?:3\.1-pro-preview(?:-customtools)?|2\.5-pro)'
+          capabilities:
+            reasoning-efforts: [low, medium, high]
+            native-web-search: true
+            native-web-search-type: google_search
+        - match: 'gemini-2\.5-(?:flash|flash-lite)'
+          capabilities:
+            # Interactions supports thinking_level for 2.5, but its whitelist starts at low.
+            reasoning-efforts: [low, medium, high]
+            native-web-search: true
+            native-web-search-type: google_search
+      models:
+        - { id: gemini-4-argon, context-window: 1048576, label: "Gemini 4 Argon", tier: high, input-modalities: [text, image, audio, video, pdf] }
+        - { id: gemini-3.8-flash, context-window: 1048576, label: "Gemini 3.8 Flash", tier: high, input-modalities: [text, image, audio, video, pdf] }
+        - { id: gemini-3.7-flash, context-window: 1048576, label: "Gemini 3.7 Flash", tier: high, input-modalities: [text, image, audio, video, pdf] }
+        - { id: gemini-3.6-flash, context-window: 1048576, label: "Gemini 3.6 Flash", tier: high, input-modalities: [text, image, audio, video, pdf] }
+        - { id: gemini-3.5-flash, context-window: 1048576, label: "Gemini 3.5 Flash", tier: high, input-modalities: [text, image, audio, video, pdf] }
+        - { id: gemini-3.5-flash-lite, context-window: 1048576, label: "Gemini 3.5 Flash-Lite", tier: medium, input-modalities: [text, image, audio, video, pdf] }
+        - { id: gemini-3.1-pro-preview, context-window: 1048576, label: "Gemini 3.1 Pro Preview", tier: high, input-modalities: [text, image, audio, video, pdf] }
+        - { id: gemini-3.1-pro-preview-customtools, context-window: 1048576, label: "Gemini 3.1 Pro Custom Tools", tier: high, input-modalities: [text, image, audio, video, pdf] }
+        - { id: gemini-2.5-pro, context-window: 1048576, label: "Gemini 2.5 Pro", tier: high, input-modalities: [text, image, audio, video, pdf] }
+        - { id: gemini-2.5-flash, context-window: 1048576, label: "Gemini 2.5 Flash", tier: medium, input-modalities: [text, image, audio, video, pdf] }
+        - { id: gemini-2.5-flash-lite, context-window: 1048576, label: "Gemini 2.5 Flash-Lite", tier: low, input-modalities: [text, image, audio, video, pdf] }
+
+    # Alibaba Cloud Model Studio's Qwen Chat endpoint. Version/model differences are data rules rather than
+    # selectable profiles. Preserved thinking remains an advanced user intent because optional preservation is billed.
+    dashscope-qwen-chat:
+      label: qwen
+      type: openai-compatible
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      default-model: qwen3.7-plus
+      instruction-role: system
+      max-tokens-field: max_completion_tokens
+      output-reserve-tokens: 65536
+      streaming: true
+      stream-usage: true
+      function-tools: true
+      sampling-policy: always
+      reasoning-efforts: []
+      reasoning-replay: never
+      prompt-cache-mode: content_cache_control
+      prompt-caching: true
+      model-capability-rules:
+        # Open-weight 3.8 models accept effort and vision, but are not in the preserve_thinking
+        # support list. Do not inherit Max/Flash's preservation or unverified explicit cache fields.
+        # https://help.aliyun.com/zh/model-studio/qwen-api-via-openai-chat-completions
+        - match: 'qwen3\.8-(?:27b|2\.4t-a95b)'
+          capabilities:
+            # The documented max_completion_tokens allowlist does not include these open-weight IDs.
+            max-tokens-field: max_tokens
+            reasoning-efforts: [none, minimal, low, medium, high, xhigh, max]
+            prompt-cache-mode: auto_prefix
+        # Current 3.8 Max/Flash use effort control and require complete preserved thinking.
+        # The official upgrade routes Max Preview requests to Max; use the same contract for that alias.
+        # https://www.alibabacloud.com/help/en/model-studio/qwen-api-via-openai-chat-completions
+        - match: 'qwen3\.8-(?:max(?:-0902|-preview)?|flash)'
+          capabilities:
+            output-reserve-tokens: 131072
+            reasoning-efforts: [none, minimal, low, medium, high, xhigh, max]
+            reasoning-replay: all
+            reasoning-history: required
+            reasoning-history-field: preserve_thinking
+        # Omni uses implicit caching and input_audio data URLs; keep it separate from Max/Flash.
+        # https://www.alibabacloud.com/help/en/model-studio/qwen-omni
+        - match: 'qwen3\.8-omni-flash'
+          capabilities:
+            max-tokens-field: max_tokens
+            output-reserve-tokens: 131072
+            reasoning-efforts: [none, minimal, low, medium, high, xhigh, max]
+            reasoning-replay: all
+            reasoning-history: required
+            reasoning-history-field: preserve_thinking
+            prompt-cache-mode: auto_prefix
+            audio-input-encoding: data_url
+            request-options: { modalities: [text] }
+        # Qwen3.7 thinking-only snapshots cannot disable thinking; preservation remains optional.
+        - match: 'qwen3\.7-max(?:-preview|-2026-05-17)'
+          capabilities:
+            reasoning-replay: all
+            reasoning-history: optional
+            reasoning-history-field: preserve_thinking
+            thinking:
+              field: enable_thinking
+              default-state: always_on
+              enabled-value: true
+              send-default: false
+        # Current Qwen3.7/3.6 hybrid families support explicit preserved thinking.
+        - match: 'qwen3\.7-(?:max(?:-us|-2026-(?:05-20|06-08))?|plus(?:-us|-2026-05-26)?|flash(?:-2026-07-15)?)'
+          capabilities:
+            reasoning-replay: all
+            reasoning-history: optional
+            reasoning-history-field: preserve_thinking
+            thinking:
+              field: enable_thinking
+              default-state: "on"
+              enabled-value: true
+              disabled-value: false
+              send-default: false
+        - match: 'qwen3\.6-(?:max-preview|plus(?:-2026-04-02)?|flash(?:-2026-04-16)?)'
+          capabilities:
+            reasoning-replay: all
+            reasoning-history: optional
+            reasoning-history-field: preserve_thinking
+            thinking:
+              field: enable_thinking
+              default-state: "on"
+              enabled-value: true
+              disabled-value: false
+              send-default: false
+        # Qwen3.5 remains hybrid but does not inherit preservation support without current official evidence.
+        - match: 'qwen3\.5-(?:plus(?:-2026-02-15)?|flash(?:-2026-02-23)?|397b-a17b|122b-a10b|27b|35b-a3b)'
+          capabilities:
+            thinking:
+              field: enable_thinking
+              default-state: "on"
+              enabled-value: true
+              disabled-value: false
+              send-default: false
+      models:
+        - { id: qwen3.8-max, context-window: 1000000, label: "Qwen3.8 Max", tier: high, input-modalities: [text, image, video] }
+        - { id: qwen3.8-max-0902, context-window: 1000000, label: "Qwen3.8 Max (0902)", tier: high, input-modalities: [text, image, video] }
+        - { id: qwen3.8-flash, context-window: 1000000, label: "Qwen3.8 Flash", tier: medium, input-modalities: [text, image, video] }
+        - { id: qwen3.8-omni-flash, context-window: 1000000, label: "Qwen3.8 Omni Flash", tier: medium, input-modalities: [text, image, audio, video] }
+        - { id: qwen3.8-27b, context-window: 1000000, label: "Qwen3.8 27B", tier: low, input-modalities: [text, image, video] }
+        - { id: qwen3.8-2.4t-a95b, context-window: 1000000, label: "Qwen3.8 2.4T A95B", tier: high, input-modalities: [text, image, video] }
+        # https://www.alibabacloud.com/en/notice/alibaba_cloud_model_studio_model_upgrade_notice_81a?_p_lc=1
+        - { id: qwen3.8-max-preview, context-window: 1000000, label: "Qwen3.8 Max Preview", tier: high, description: "Official alias routes to Qwen3.8 Max", input-modalities: [text, image, video] }
+        - { id: qwen3.7-max, context-window: 1000000, label: "Qwen3.7 Max", tier: high, input-modalities: [text] }
+        - { id: qwen3.7-plus, context-window: 1000000, label: "Qwen3.7 Plus", tier: high, input-modalities: [text] }
+        - { id: qwen3.7-flash, context-window: 1000000, label: "Qwen3.7 Flash", tier: medium, input-modalities: [text] }
+        - { id: qwen3.6-max-preview, context-window: 262144, label: "Qwen3.6 Max Preview", tier: high, input-modalities: [text] }
+        - { id: qwen3.6-plus, context-window: 1000000, label: "Qwen3.6 Plus", tier: medium, input-modalities: [text] }
+        - { id: qwen3.6-flash, context-window: 1000000, label: "Qwen3.6 Flash", tier: low, input-modalities: [text] }
+        - { id: qwen3.5-plus, context-window: 1000000, label: "Qwen3.5 Plus", tier: medium, input-modalities: [text] }
+        - { id: qwen3.5-flash, context-window: 1000000, label: "Qwen3.5 Flash", tier: low, input-modalities: [text] }
+
+    # Zhipu's direct GLM Chat endpoint. GLM-5.3 is always thinking with a narrower effort enum;
+    # retain GLM-5.2's toggle and compatibility values for existing configurations.
+    zhipu-glm-chat:
+      label: glm
+      type: openai-compatible
+      base-url: https://open.bigmodel.cn/api/paas/v4
+      default-model: glm-5.2
+      instruction-role: system
+      max-tokens-field: max_tokens
+      output-reserve-tokens: 65536
+      streaming: true
+      stream-usage: false
+      function-tools: true
+      sampling-policy: omit
+      reasoning-efforts: []
+      reasoning-replay: all
+      prompt-cache-mode: auto_prefix
+      thinking:
+        field: thinking
+        default-state: "on"
+        enabled-object: { type: enabled, clear_thinking: false }
+        disabled-object: { type: disabled }
+        send-default: true
+      model-capability-rules:
+        # FlashX and its legal variant share Flash's always-on thinking contract.
+        # https://docs.z.ai/guides/vlm/glm-5.3-flash
+        - match: 'glm-5\.3(?:-flash(?:x(?:-legal)?)?)?'
+          capabilities:
+            output-reserve-tokens: 131072
+            reasoning-efforts: [low, high, max]
+            reasoning-history: required
+            thinking:
+              default-state: always_on
+        - match: 'glm-5\.2(?:-[A-Za-z0-9._-]+)?'
+          capabilities:
+            reasoning-efforts: [none, minimal, low, medium, high, xhigh, max]
+      models:
+        - { id: glm-5.3, context-window: 1000000, label: "GLM-5.3", tier: high, input-modalities: [text] }
+        # Only the image_url transport is verified here; file/video support needs its own wire contract.
+        - { id: glm-5.3-flash, context-window: 1000000, label: "GLM-5.3 Flash", tier: medium, input-modalities: [text, image] }
+        - { id: glm-5.3-flashx, context-window: 1000000, label: "GLM-5.3 FlashX", tier: medium, description: "API access; not currently included in Coding Plan", input-modalities: [text, image] }
+        - { id: glm-5.3-flashx-legal, context-window: 1000000, label: "GLM-5.3 FlashX Legal", tier: medium, input-modalities: [text, image] }
+        - { id: glm-5.2, context-window: 1000000, label: "GLM-5.2", tier: high, input-modalities: [text] }
+        - { id: glm-5.1, context-window: 200000, label: "GLM-5.1", tier: high, input-modalities: [text] }
+        - { id: glm-5, context-window: 200000, label: "GLM-5", tier: high, input-modalities: [text] }
+    # Meta's hosted Spark API. Responses preserves encrypted reasoning across tool turns.
+    # https://dev.meta.ai/docs/models / https://dev.meta.ai/docs/reasoning
+    meta-muse-responses:
+      label: meta-muse
+      type: openai-responses
+      base-url: https://api.meta.ai/v1
+      default-model: muse-spark-1.3
+      max-tokens-field: max_output_tokens
+      streaming: true
+      function-tools: true
+      sampling-policy: omit
+      reasoning-efforts: []
+      reasoning-replay: native_items
+      prompt-cache-mode: auto_prefix
+      model-capability-rules:
+        - match: 'muse-spark-1\.3'
+          capabilities:
+            reasoning-efforts: [minimal, low, medium, high, xhigh, max]
+            native-web-search: true
+            native-web-search-type: web_search
+        - match: 'muse-spark-1\.(?:1|2(?:-contributor)?|3-contributor)'
+          capabilities:
+            reasoning-efforts: [minimal, low, medium, high, xhigh]
+            native-web-search: true
+            native-web-search-type: web_search
+      models:
+        - { id: muse-spark-1.3, label: "Muse Spark 1.3", tier: high, context-window: 1048576, input-modalities: [text, image, file] }
+        - { id: muse-spark-1.2, label: "Muse Spark 1.2", tier: high, context-window: 1048576, input-modalities: [text, image, file] }
+        - { id: muse-spark-1.1, label: "Muse Spark 1.1", tier: high, context-window: 1048576, input-modalities: [text, image, file] }
+        - { id: muse-spark-1.3-contributor, label: "Muse Spark 1.3 Contributor", description: "Opt-in: Meta may use inputs and outputs for training", tier: high, context-window: 1048576, input-modalities: [text, image, file] }
+        - { id: muse-spark-1.2-contributor, label: "Muse Spark 1.2 Contributor", description: "Opt-in: Meta may use inputs and outputs for training", tier: high, context-window: 1048576, input-modalities: [text, image, file] }
+
+    # Conservative baseline for a new/unknown OpenAI-compatible Chat endpoint. It assumes the endpoint supports
+    # streaming and function tools (required by the Agent loop), but sends no usage extension, sampling control,
+    # reasoning replay, provider cache field, or native attachment. Ark can use this baseline; its Context caching is
+    # a separate API workflow and is intentionally not claimed/implemented by the generic Chat adapter.
+    openai-compatible-chat-safe:
+      label: openai-compatible
+      type: openai-compatible
+      instruction-role: system
+      max-tokens-field: max_tokens
+      streaming: true
+      stream-usage: false
+      function-tools: true
+      sampling-policy: omit
+      reasoning-replay: never
+      prompt-cache-mode: none
+
+  # User-owned endpoint/key/model data. The highest-precedence YAML document that declares this key owns the entire
+  # concrete Provider Map; lower documents never contribute entries or fields. Profiles below/above remain layered.
+  providers:
+    # Common optional fields for every provider:
+    #   enabled: true          # false keeps the source entry but removes it from runtime routes/catalogues
+    #   proxy: off             # per-provider URL or off/direct/none; omitted = inherit global/env proxy
+    #   max-tokens: 16384      # positive=explicit limit; omitted/0/negative=automatic (no universal cap)
+    #   client-emulation/client-version and features are shown below; ordinary endpoints leave them unset/auto.
+    primary:
+      label: OpenAI Chat
+      profile: openai-chat
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+      api-key: ${OPENAI_API_KEY:}
+      default-model: ${OPENAI_DEFAULT_MODEL:gpt-4o-mini}
+      # Optional: curated catalog surfaced to the WebUI model picker. `id` is sent verbatim to
+      # the upstream; `tier` is a coarse capability bucket (high/medium/low) used purely for a
+      # colour badge; `costHint` is reserved for a future cost-display feature and currently
+      # ignored by the UI. Configuration is read at backend startup; restart the process after
+      # adding/removing entries (no Provider hot reload or persistent GUI/TUI editor in this release).
+      models:
+        - { id: gpt-5.6, context-window: 1050000,       label: "GPT-5.6 (Sol)", tier: high,   input-modalities: [text, image, file] }
+        - { id: gpt-5.6-sol, context-window: 1050000,   label: "GPT-5.6 Sol",   tier: high,   input-modalities: [text, image, file] }
+        - { id: gpt-5.6-terra, context-window: 1050000, label: "GPT-5.6 Terra", tier: medium, input-modalities: [text, image, file] }
+        - { id: gpt-5.6-luna, context-window: 1050000,  label: "GPT-5.6 Luna",  tier: low,    input-modalities: [text, image, file] }
+        - { id: gpt-5.5, context-window: 1050000,       label: "GPT-5.5",       tier: high,   input-modalities: [text, image, file] }
+        - { id: gpt-4o, context-window: 128000,        label: "GPT-4o",        tier: high,   costHint: "1\u00d7",    input-modalities: [text, image] }
+        - { id: gpt-4o-mini, context-window: 128000,   label: "GPT-4o mini",   tier: low,    costHint: "0.05\u00d7", input-modalities: [text, image] }
+        - { id: o3-mini, context-window: 200000,       label: "o3-mini",       tier: high,   costHint: "3\u00d7", description: "reasoning-tuned", input-modalities: [text] }
+    fallback:
+      # Opt-in disaster recovery. Enabling this reserved provider is also the automatic-fallback switch.
+      enabled: false
+      label: DeepSeek
+      profile: deepseek-v4
+      base-url: ${FALLBACK_BASE_URL:https://api.deepseek.com/v1}
+      api-key: ${FALLBACK_API_KEY:}
+      default-model: ${FALLBACK_DEFAULT_MODEL:deepseek-v4-flash}
+      models:
+        - { id: deepseek-flash, context-window: 1000000, label: "DeepSeek V4.1 Flash", tier: medium, input-modalities: [text, image] }
+        - { id: deepseek-v4-flash, context-window: 1000000, label: "DeepSeek Flash (legacy alias)", tier: medium, input-modalities: [text, image] }
+        - { id: deepseek-v4-pro, context-window: 1000000,   label: "DeepSeek V4 Pro",   tier: high, description: "reasoning-tuned", input-modalities: [text] }
+    # Native Anthropic provider (Messages API, /v1/messages). Distinct from the OAI-compatible
+    # path: handles tool_use/tool_result content blocks, hoists system prompts, streams via
+    # Anthropic's named SSE events, captures extended-thinking signatures for cross-turn replay,
+    # and marks a prompt-cache breakpoint on the system prefix. Set ANTHROPIC_API_KEY to enable;
+    # every enabled provider is selectable without changing router.default-provider. base-url defaults to
+    # https://api.anthropic.com when blank. The anthropic-version header is pinned to the GA value
+    # (2023-06-01) and is NOT a knob — modern-model behaviour is controlled by the fields below.
+    anthropic:
+      enabled: false
+      label: Anthropic
+      profile: anthropic-messages
+      base-url: ${ANTHROPIC_BASE_URL:}
+      api-key: ${ANTHROPIC_API_KEY:}
+      default-model: ${ANTHROPIC_DEFAULT_MODEL:claude-opus-4-8}
+      # Optional user intent; omission is equivalent to auto.
+      # features:
+      #   reasoning: auto
+      #   effort: auto
+      #   prompt-cache: auto
+      #   web-search: auto     # auto/on: prefer declared native search, otherwise retain local web_search fallback
+      #   attachments: auto
+      # Strict Claude Code relays only:
+      # client-emulation: claude-code
+      # client-version: 2.1.187
+    # To add official Kimi/xAI/Gemini endpoints, create a normal provider entry like these. Profiles own protocol
+    # details; users only supply endpoint/key/model. router.default-provider chooses the "Auto" endpoint.
+    # kimi:
+    #   profile: moonshot-kimi-chat
+    #   api-key: ${MOONSHOT_API_KEY:}
+    # grok:
+    #   profile: xai-responses-grok45
+    #   api-key: ${XAI_API_KEY:}
+    # gemini:
+    #   profile: gemini-interactions
+    #   api-key: ${GEMINI_API_KEY:}
+    # Native OpenAI Responses API (/v1/responses) — OpenAI's current surface for reasoning models
+    # (GPT-5.x / o-series). Stateless: store=false + encrypted reasoning items replayed across turns.
+    # Distinct from the OpenAI Chat Completions path above. Other compatible vendors should select their verified
+    # vendor profile or openai-compatible-chat-safe rather than inheriting OpenAI-specific extensions. Set
+    # OPENAI_API_KEY to enable. Set
+    # OPENAI_RESPONSES_DEFAULT_MODEL to a real Responses-capable model id for your account.
+    openai-responses:
+      enabled: false
+      label: OpenAI Responses
+      profile: openai-responses
+      base-url: ${OPENAI_RESPONSES_BASE_URL:https://api.openai.com/v1}
+      api-key: ${OPENAI_API_KEY:}
+      default-model: ${OPENAI_RESPONSES_DEFAULT_MODEL:gpt-5.1}
+      # Runtime capability contract: Responses sends input_image/input_file only for an exact configured id
+      # containing the matching modality. Add relay aliases/custom snapshots explicitly.
+      models:
+        - { id: gpt-6-astra, context-window: 1050000, label: "GPT-6 Astra", tier: high, input-modalities: [text, image, file] }
+        - { id: gpt-6.1-sol, context-window: 1050000 }
+        - { id: gpt-6.1-terra, context-window: 1050000 }
+        - { id: gpt-6-sol, context-window: 1050000 }
+        - { id: gpt-6-luna, context-window: 1050000 }
+        - { id: gpt-5.1, context-window: 400000,       label: "GPT-5.1",       tier: high,   input-modalities: [text, image, file] }
+        - { id: gpt-5.5, context-window: 1050000,       label: "GPT-5.5",       tier: high,   input-modalities: [text, image, file] }
+        - { id: gpt-5.6, context-window: 1050000,       label: "GPT-5.6 (Sol)", tier: high,   input-modalities: [text, image, file] }
+        - { id: gpt-5.6-sol, context-window: 1050000,   label: "GPT-5.6 Sol",   tier: high,   input-modalities: [text, image, file] }
+        - { id: gpt-5.6-terra, context-window: 1050000, label: "GPT-5.6 Terra", tier: medium, input-modalities: [text, image, file] }
+        - { id: gpt-5.6-luna, context-window: 1050000,  label: "GPT-5.6 Luna",  tier: low,    input-modalities: [text, image, file] }
+      # thinking: adaptive   # enable reasoning (sends reasoning.summary + encrypted_content for replay)
+      # effort: high         # → reasoning.effort; allowed values are validated per model
+      # max-tokens: 16384    # → max_output_tokens
+      # send-temperature: false  # default false; reasoning models (gpt-5.x/o-series) reject temperature
+      # Cache behaviour is selected by the resolved provider→rule→exact capability. Relay aliases need an explicit contract.
+
+  router:
+    # Used only when the request/thread does not select a provider. This is not a failover list.
+    # Empty means the first enabled non-fallback entry in the owning providers Map. This lets a user-owned Provider
+    # collection replace the packaged catalogue without also having to override router settings.
+    default-provider: ""
+    # NOTE: "parse" is intentionally NOT in this list. A malformed SSE chunk almost
+    # never recovers by switching providers — it usually indicates a transient single-frame
+    # upstream glitch in an otherwise healthy stream. Failing over wastes the next provider's
+    # quota and may produce duplicate visible text. See ProviderRouter.DEFAULT_FAILOVER_CODES.
+    #
+    # "stream_ttft_timeout" covers an upstream that completes HTTP 200 but never sends any
+    # content within the per-stream TTFT budget (90s default; see -Dharnex.provider.streamTtftMs).
+    # Without it, total-budget-ms can be silently defeated by a wedged-but-not-dead upstream
+    # that hits the provider's own 10-min idle readTimeout instead of failing over.
+    failover-on: ["429","500","502","503","504","529","timeout","network","stream_ttft_timeout"]
+    # Wall-clock budget for the entire failover sequence (ms). Stops the router sleeping for the
+    # next exponential backoff once exceeded; the last upstream error is rethrown. 0 = unlimited.
+    total-budget-ms: 120000
+    # Chat keeps the explicitly selected provider sticky. Retry transient failures against it up to this many
+    # total attempts, then switch only to the reserved provider id `fallback` (never walk every configured provider).
+    selected-provider-max-attempts: 5
+    # EWMA is diagnostic only. Circuit-breaker admission is independent and targets provider/model identities.
+    ewma-enabled: true
+    circuit-breaker-enabled: true
+    circuit-failure-threshold: 5
+    # After the consecutive-failure threshold opens the circuit, route to `fallback` for this long. Then one request
+    # probes the selected provider (HALF_OPEN); success closes the circuit, failure starts another cooldown.
+    circuit-open-ms: 30000
+
+  toolsets:
+    # Three user-facing modes — match the user mental model (看 / 巡检 / 改) so an IM user
+    # picking `/toolset` doesn't have to guess between two synonyms. Aligned with
+    #   - read    : 只看      — file_read / glob / grep / web_fetch + 只读元工具
+    #   - inspect : 巡检 / 排查 — read + bash（适合 SRE k8s describe / kubectl logs / curl）
+    #   - act     : 全做       — inspect + 写文件 / 编辑 / 子代理 / 记忆写入
+    # 需要更细粒度时直接在 `presets:` 下追加自定义 key 即可（覆盖关系：presets 非空 → 完全替换内置 3 档）。
+    # `mixture_of_agents` 仍然不进任何 preset，按 MoaTool javadoc 解释手工启用。
+    default-set: [act]
+    presets:
+      read:    [file_read, glob, grep, web_fetch, web_search,
+                memory_list, skill_list, skill_read, session_search, session_read, session_fact, self_inspect, todo_read, todo_write,
+                lesson_record, ask_user]
+      inspect: [file_read, glob, grep, web_fetch, web_search, bash,
+                memory_list, skill_list, skill_read, session_search, session_read, session_fact, self_inspect, todo_read, todo_write,
+                lesson_record, ask_user]
+      act:     [bash, file_read, file_write, file_edit, multi_edit, glob, grep, web_fetch, web_search,
+                memory_remember, memory_list, memory_forget,
+                skill_list, skill_read, session_search, session_read, session_fact, delegate, self_inspect, todo_read, todo_write,
+                submit_plan, update_goal, verify, lesson_record, ask_user, image_generate, image_inspect, image_export]
+      mcp:     [bash, file_read, file_write, file_edit, multi_edit, glob, grep, web_fetch, web_search,
+                memory_remember, memory_list, memory_forget,
+                skill_list, skill_read, session_search, session_read, session_fact, delegate, self_inspect, todo_read, todo_write,
+                submit_plan, update_goal, verify, lesson_record, ask_user, image_generate, image_inspect, image_export]
+
+  budget:
+    per-tool-chars: 8000              # UI 预览：单工具结果超过即在界面截断为 preview + ref:{sha}（可展开）
+    per-turn-chars: 30000             # UI 预览：单轮所有工具结果聚合上限
+    preview-chars: 1200               # 截断后保留的预览片段长度
+    # ── 发给模型(LLM)的独立阈值：与上面的 UI 预览阈值解耦 ──────────────────────────
+    # UI 阈值只约束界面显示；模型收到的是完整内容，仅当超过下列(明显更大的)阈值才对模型截断。
+    # per-tool-chars-for-llm: 模型侧单工具结果字符上限，默认 100000(约为 UI 8000 的 12 倍)，
+    #   日常读文件/grep/bash 输出可完整回传；0 = 不对单工具额外截断(仅受 per-turn-for-llm 与摘要器约束)。
+    per-tool-chars-for-llm: 100000
+    # per-turn-chars-for-llm: 模型侧单轮聚合字符上限，默认 0 = 关闭(仅 per-tool-for-llm 与摘要器生效)。
+    per-turn-chars-for-llm: 0
+    # per-tool-tokens-for-llm / per-turn-tokens-for-llm: 模型侧真实 token 上限，默认 0 = 关闭(仅按字符)。
+    per-tool-tokens-for-llm: 0
+    per-turn-tokens-for-llm: 0
+
+  cron:
+    # Cron jobs run unattended with full toolset access. Leaving allowed-toolsets empty means a
+    # job may use ANY toolset, which makes the scheduler an effective scheduled-RCE primitive if
+    # the prompt is attacker-controlled. In production restrict to the minimum needed, e.g.
+    # allowed-toolsets: [read]   — only the inspection-grade preset (file_read / glob / grep /
+    # web_fetch / read-only metas). The scheduler validates the EFFECTIVE toolsets (job.toolsets
+    # if non-empty, else harnex.toolsets.default-set), so you cannot bypass this allow-list by
+    # omitting the toolsets field on the job. max-jobs caps total registered jobs (set 0 for unlimited).
+    allowed-toolsets: []
+    max-jobs: 100
+
+  approval:
+    mode: default        # bypass | default | strict
+    # EXTRA dangerous-command regex patterns. As of round-16 these are APPENDED to the
+    # hardened built-in defaults (see ApprovalService ctor: broadened rm -rf coverage that
+    # catches /home, chmod -R 777 of root-ish paths, fork bomb tolerant of whitespace,
+    # curl|sh, dd of=/dev/sdX, mkfs., chmod 777 /, etc). They no longer REPLACE them.
+    # Leave empty to use only the baseline; uncomment + add site-specific rules below.
+    dangerous-patterns: []
+    # Escape hatch: set true to disable additive merging and use ONLY the patterns above
+    # (legacy pre-round-16 behaviour). The startup log will WARN. Use this only when you
+    # need to deliberately RELAX a baseline pattern and have audited the alternatives.
+    replace-default-patterns: false
+
+  execution:
+    environment: ${HARNEX_EXECUTION_ENVIRONMENT:host} # host | docker, on the Runtime machine
+    sandbox-mode: ${HARNEX_EXECUTION_SANDBOX_MODE:none} # none | read-only | workspace-write; opt-in
+    sandbox-network: ${HARNEX_EXECUTION_SANDBOX_NETWORK:deny} # only applies to sandbox/container commands
+    sandbox-runtime: ${HARNEX_EXECUTION_SANDBOX_RUNTIME:} # optional @anthropic-ai/sandbox-runtime package directory
+    writable-roots: [] # explicit additional cache/output directories on this Runtime host
+    image: ${HARNEX_EXECUTION_IMAGE:debian:stable-slim}
+    memory: ${HARNEX_EXECUTION_MEMORY:512m}
+    cpus: ${HARNEX_EXECUTION_CPUS:1}
+    pids-limit: ${HARNEX_EXECUTION_PIDS:256}
+  # Hard-validation gates the `verify` tool can execute. The agent is taught to
+  # call `verify` before claiming a task is done. Examples (uncomment as needed):
+  verify:
+    timeout-ms: 180000
+    checks: {}
+    #  compile:    "mvn -q -DskipTests test-compile"
+    #  unit-test:  "mvn -q test"
+    #  fe-build:   "cd frontend && npm run build"
+    #  typecheck:  "cd frontend && npx vue-tsc --noEmit"
+
+  # Edit-time guard rails:
+  #   - file_edit / multi_edit accept exact/EOL context matches against current disk contents;
+  #     broader whitespace tolerance requires a current tracked read by default
+  #   - every edit checks contents again immediately before writing
+  #   - require a recent `file_read` OR explicit overwrite=true before `file_write`
+  #     replaces an existing file (new-file writes are always allowed)
+  #   - block edits to "protected" paths via globs OR a workspace-level `.harnexignore`
+  # Combined with snapshot-based undo, this catches the classic
+  # "AI rewrote a file from stale memory and clobbered my changes" failure mode BEFORE
+  # the damage rather than only repairing it after.
+  safety:
+    respect-ignore-file: true            # honour <workspace>/.harnexignore
+    tracker-max-entries-per-thread: 256
+    # Credential / PII scrubbing applied by SensitiveDataMiddleware (in-memory tool
+    # results re-entering the LLM context), BudgetEnforcer (oversize tool-result blobs
+    # persisted to data/tool_results/<tid>/<sha>.txt), and LlmAuditLog (when
+    # harnex.audit.enabled=true). All three layers share SecretRedactor as the single
+    # pattern source — keep these two flags in lock-step across deployments.
+    #
+    # redact-secrets-in-tool-results=true (default) is required for any non-trivial
+    # deployment: model-echoed sk-..., ghp_..., AKIA..., AIza..., JWTs and password=...
+    # / api_key=... / secret=... assignments are stripped before the redacted text is
+    # both shown to the model on the next iteration AND persisted to disk.
+    #
+    # redact-pii-in-tool-results=false (default) is intentionally OPT-IN: PII patterns
+    # (CN mobile, CN national ID, email, credit-card-shaped digit groups) frequently
+    # appear in legitimate user-facing requests ("look up the issue alice@example.com
+    # filed"). Compliance-grade deployments (HR / legal / healthcare / finance) should
+    # set this to true; personal / dev installs leave it off.
+    redact-secrets-in-tool-results: ${HARNEX_REDACT_SECRETS:true}
+    redact-pii-in-tool-results: ${HARNEX_REDACT_PII:false}
+    protected-globs:
+      - "**/.env"
+      - "**/.env.*"
+      - "**/secrets/**"
+      - "**/*.pem"
+      - "**/*.key"
+      - "**/id_rsa"
+      - "**/id_ed25519"
+      - "**/.git/**"
+
+  moa:
+    enabled: false
+    reference-models: []
+    aggregator-model:
+
+  auth:
+    # Local user-level product: no interactive account/login by default.
+    # Remote/shared API deployments must opt in explicitly with HARNEX_AUTH_ENABLED=true.
+    enabled: ${HARNEX_AUTH_ENABLED:false}
+    # Comma-separated via env HARNEX_AUTH_TOKENS, or list here.
+    tokens: ${HARNEX_AUTH_TOKENS:}
+    public-paths:
+      # Local API capability discovery + the whole auth resource (docs/03 §3.14): clients probe
+      # the runtime and exchange credentials (boot-token or interactive login) BEFORE they hold
+      # a session. No user data exposed; each endpoint proves identity its own way.
+      - /api/v1/protocol
+      - /api/v1/scope
+      - /api/v1/auth
+      - /actuator/health
+      - /actuator/info
+      # IM gateway endpoints (DingTalk / Feishu / WeCom / generic webhook) authenticate
+      # the *caller* via per-platform HMAC/nonce signatures inside their own controllers
+      # (see DingTalkGateway / FeishuGateway / WeComGateway / WebhookController). Putting
+      # them behind the cookie-based bearer auth filter would 401 every legitimate
+      # platform-direct webhook because the IM platforms have no way to attach our
+      # HARNEX_TOKEN. CSRF is similarly exempted in CsrfConfig#PUBLIC_PREFIXES.
+      - /api/gateway
+      # /actuator/prometheus is NOT public by default — it leaks JVM internals.
+      # If you want local-only Prometheus scraping, prefer binding management to 127.0.0.1
+      # in application.yml (`management.server.address: 127.0.0.1`) over re-exposing it here.
+
+  subagent:
+    max-per-thread: 3
+    # Bounded default; set 0 explicitly to inherit harnex.max-iterations. A delegate override may only lower it.
+    # One iteration is an LLM round trip, not one file chunk; prefer search/range/parallel reads for large documents.
+    max-iterations: ${HARNEX_SUBAGENT_MAX_ITERATIONS:64}
+    soft-timeout-ms: ${HARNEX_SUBAGENT_SOFT_TIMEOUT_MS:1200000} # 20 min: progress checkpoint, then resume
+    timeout-ms: ${HARNEX_SUBAGENT_TIMEOUT_MS:0} # No local execution deadline by default; explicit parent/Goal limits still apply
+    queue-timeout-ms: ${HARNEX_SUBAGENT_QUEUE_TIMEOUT_MS:120000} # 2 min admission wait, separate from execution
+
+  gateway:
+    # Generic /api/gateway/inbound — HMAC-SHA256 of body against X-Harnex-Signature.
+    webhook-secret: ${HARNEX_GATEWAY_SECRET:}
+    # DingTalk outgoing-bot signature secret (HMAC-SHA256 of "{ts}\n{secret}"). Empty = endpoint disabled.
+    dingtalk-secret: ${HARNEX_DINGTALK_SECRET:}
+    # WeCom (企业微信) callback token — sha1(token+timestamp+nonce+payload). Empty = endpoint disabled.
+    wecom-token: ${HARNEX_WECOM_TOKEN:}
+    # Feishu/Lark event signature — the **Encrypt Key** from the Feishu/Lark developer
+    # console (NOT the verification token; that's `feishu-verification-token` below). The
+    # signature is a **plain SHA-256** digest of `timestamp + nonce + encrypt_key + raw_body`
+    # (NOT HMAC) per
+    # https://open.feishu.cn/document/server-docs/event-subscription-guide/event-subscription/data-decrypt-and-verification
+    # **Empty = fail-closed**: real `event_callback` POSTs are rejected with HTTP 503; the
+    # initial `url_verification` handshake (Phase 1) still works without a configured secret
+    # so a freshly registered URL can complete console-side verification before the operator
+    # sets the secret. See FeishuGateway.java.
+    feishu-secret: ${HARNEX_FEISHU_SECRET:}
+    # Optional Feishu verification token cross-check during url_verification handshake.
+    feishu-verification-token: ${HARNEX_FEISHU_VTOKEN:}
+    # Truncate echoed reply per channel call (full reply still persisted in thread.json).
+    reply-max-chars: 3500
+    # ----- Outbound push-back (REQUIRED for each IM channel you enable) -----
+    # Architecture: the inbound webhook returns 200 immediately; the final agent reply is
+    # pushed BACK to the IM group out-of-band via these custom group-robot URLs. This is the
+    # pattern used by every mainstream IM bot (Slack apps, ChatGPT-on-WeChat, FastGPT,
+    # LangChain adapters) — it removes any dependency on the platform's flaky "automatic
+    # redelivery on no-ack" behaviour.
+    #
+    # If you enable a channel's inbound secret above WITHOUT setting its outbound URL here,
+    # the inbound endpoint will refuse messages with HTTP 503 (so misconfigurations surface
+    # immediately instead of silently dropping every agent answer).
+    #
+    # DingTalk: create a "custom group robot" in your group, copy its webhook URL (already
+    #   contains ?access_token=...). If you turn on the "签名" security option, also paste
+    #   the SECxxx string into sign-secret.
+    dingtalk-outbound:
+      webhook-url: ${HARNEX_DINGTALK_OUTBOUND_URL:}
+      sign-secret: ${HARNEX_DINGTALK_OUTBOUND_SIGN:}
+    # Feishu: create a "自定义机器人" in your group, copy its hook URL (.../bot/v2/hook/XXX).
+    #   If "签名校验" is on, paste the secret here.
+    feishu-outbound:
+      webhook-url: ${HARNEX_FEISHU_OUTBOUND_URL:}
+      sign-secret: ${HARNEX_FEISHU_OUTBOUND_SIGN:}
+    # WeCom: create a group robot, copy its webhook URL (already contains ?key=...).
+    #   No separate secret — rotation = create a new robot in the group.
+    wecom-outbound:
+      webhook-url: ${HARNEX_WECOM_OUTBOUND_URL:}
+    # ----- Sender allowlist -----
+    # Gate for inbound IM / webhook senders (DingTalk / Feishu / WeCom / generic
+    # webhook / Alertmanager). Two formats are accepted per entry:
+    #   - "user-id"           -> matches that user on ANY channel
+    #   - "channel:user-id"   -> matches only when the inbound channel matches too
+    #   - "*"                 -> wildcard, allow EVERY sender on every channel
+    #
+    # Default ships as ["*"] (allow-all) so a fresh install talks back on the first
+    # IM message without extra config. The runtime is fail-closed: an EMPTY list
+    # ([]) denies everything and logs a WARN per (channel,user). For production
+    # deployments tighten this down to the operators / bots that should drive the
+    # agent — the platform secret only proves the request came from the IM bridge,
+    # not that the human is authorised.
+    #
+    # **Production posture**: override via `HARNEX_GATEWAY_ALLOWED_SENDERS` (or a
+    # prod profile YAML) with the explicit list of operator / bot ids — e.g.
+    #   HARNEX_GATEWAY_ALLOWED_SENDERS=feishu:ou_abc,dingtalk:user-xyz
+    # Leaving the wildcard in production effectively means "anyone who can post
+    # into the bound IM group can drive the agent".
+    # Edits to this list require a process restart to take effect — the existing
+    # POST /api/workspace/reload endpoint only re-reads AGENTS.md (see
+    # WorkspaceContext.reload()), it does NOT re-bind @ConfigurationProperties.
+    allowed-senders: ["*"]
+    # Examples:
+    # allowed-senders:
+    #   - "feishu:ou_abc123"        # only this Feishu open_id
+    #   - "ops-bot"                 # this user on any channel
+    # Dedicated HMAC-SHA256 secret for /api/gateway/alertmanager. Independent of
+    # webhook-secret so you can rotate the alerting credentials without touching IM bridges.
+    alertmanager-secret: ${HARNEX_ALERTMANAGER_SECRET:}
+    # Per-channel default toolset / model — applied on the FIRST turn of a
+    # brand-new thread minted by an IM gateway. Subsequent turns honour whatever the user /
+    # model later sets. Empty = no override (use the global harnex.toolsets.default-set).
+    # Channel keys: feishu / dingtalk / wecom / webhook / alertmanager / cron / webui / tui.
+    channel-defaults: {}
+    # Examples:
+    # channel-defaults:
+    #   feishu:       { toolsets: [read] }
+    #   dingtalk:     { toolsets: [inspect] }
+    #   alertmanager: { toolsets: [inspect], model: deepseek-chat }
+
+  # History summariser — dedicated continuation-summary model. ON by default.
+  # Check the soft watermark before requests (including text-only turns) and after tool batches; keep a hard guard.
+  # Count the prepared messages, tools and reminders together; provider usage calibrates remaining protocol overhead.
+  # target-percent is aspirational: useful working headroom is success even when the target cannot be reached.
+  # When `enabled: false` the same triggers fire but with deterministic truncation
+  # (no LLM call). Use a reliable model: the result becomes the state for later turns.
+  summarizer:
+    enabled: ${HARNEX_SUMMARIZER_ENABLED:true}
+    # Empty = the task's actual provider/model. A configured target is tried first; the reserved fallback and task
+    # target are then attempted when distinct. Target health is isolated from normal Chat routing.
+    provider: ${HARNEX_SUMMARIZER_PROVIDER:}
+    model: ${HARNEX_SUMMARIZER_MODEL:}                  # empty => provider default
+    context-window: 128000
+    output-reserve-tokens: 16000
+    safety-reserve-tokens: 0
+    soft-threshold-percent: 75
+    hard-threshold-percent: 90
+    target-percent: 40
+    min-new-tokens: 16000
+    min-new-context-percent: 15
+    minimum-reduction-percent: 20
+    max-ineffective-compressions: 3
+    keep-tail: 0                                  # 0 = token budget only; optional message-count cap
+    keep-tail-chars: 0                            # 0 = token budget only; optional character cap
+    summary-max-chars: 24000
+    # Upper ceiling for adaptive summary generation. The actual request also fits the summary model's remaining
+    # window and declared models[].max-output-tokens; prose, fact candidates and counted reasoning share it.
+    max-output-tokens: ${HARNEX_SUMMARIZER_MAX_OUTPUT_TOKENS:16384}
+    # Independent Runs may compact concurrently; calls above this small bound fail fast to deterministic mode.
+    max-concurrent: ${HARNEX_SUMMARIZER_MAX_CONCURRENT:2}
+    # Total budget shared by this compression's model attempts and format repair. Exhaustion uses local history
+    # handling and never stops the task. An explicitly bounded task can shorten this auxiliary budget.
+    timeout-ms: ${HARNEX_SUMMARIZER_TIMEOUT_MS:180000}
+    attempt-timeout-ms: ${HARNEX_SUMMARIZER_ATTEMPT_TIMEOUT_MS:90000}
+    prefix-reuse: ${HARNEX_SUMMARIZER_PREFIX_REUSE:false}
+
+  # MCP (Model Context Protocol) client — connect to external MCP servers
+  # to discover and use their tools alongside built-in tools.
+  # Supported transports: stdio, sse, streamable-http (alias: http).
+  # Examples below are commented out so no external MCP servers start by default.
+  mcp:
+    servers: []
+    # Expose Harnex's own tools as an MCP server so external agents
+    # (Claude Desktop / Cursor / Continue / another Harnex) can call them via JSON-RPC
+    # at POST /api/mcp/server/rpc. Disabled by default — turning it on lets any holder of a
+    # valid bearer token drive bash/file_write/etc. on this host. Operators MUST opt in.
+    # `server-toolset` controls which preset (read / inspect / act / your-custom) is exposed;
+    # default `read` is the safest non-empty option.
+    server-enabled: ${HARNEX_MCP_SERVER_ENABLED:false}
+    server-toolset: ${HARNEX_MCP_SERVER_TOOLSET:read}
+    # Permission mode applied to every synthetic thread that backs an MCP /api/mcp/server/rpc
+    # call. There is no UI emitter on this entrypoint, so an ASK decision from ApprovalService
+    # would block on the 120s approval-wait deadline and then deny — turning every gated call
+    # into a 2-minute hang. `yolo` short-circuits ASK to ALLOW (the dangerous-pattern denylist
+    # under harnex.approval.dangerous-patterns and the exposed-toolset cap above remain in
+    # force). Set to `accept-edits` to auto-allow only file/memory writes and let bash /
+    # web_fetch / delegate fail fast.
+    server-permission-mode: ${HARNEX_MCP_SERVER_PERMISSION_MODE:yolo}
+    # Example configurations:
+    # servers:
+    #   # ---- Prometheus (READ ONLY metrics) ----
+    #   - name: prometheus
+    #     transport: stdio
+    #     command: npx
+    #     args: ["-y", "@modelcontextprotocol/server-prometheus"]
+    #     env:
+    #       PROMETHEUS_URL: ${PROMETHEUS_URL:http://prometheus:9090}
+    #       # Optional bearer for protected Prometheus deployments
+    #       PROMETHEUS_BEARER_TOKEN: ${PROMETHEUS_BEARER_TOKEN:}
+    #
+    #   # ---- GitHub (PR / issue / file read) ----
+    #   - name: github
+    #     transport: stdio
+    #     command: npx
+    #     args: ["-y", "@modelcontextprotocol/server-github"]
+    #     env:
+    #       GITHUB_PERSONAL_ACCESS_TOKEN: ${GITHUB_TOKEN:}
+    #
+    #   # Example: filesystem server scoped to a temp dir
+    #   - name: filesystem
+    #     transport: stdio
+    #     command: npx
+    #     args: ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    #
+    #   # Example: remote SSE MCP server
+    #   - name: remote-tools
+    #     transport: sse
+    #     url: https://mcp.example.com/sse
+    #     headers:
+    #       Authorization: "Bearer ${MCP_TOKEN:}"
+
+  # Fine-grained hook rules. Each rule matches tool calls by name pattern and
+  # fires at a specified phase: preToolCall, postToolCall, or onError.
+  # Supported actions: log (audit), veto (block execution), notify (SSE event).
+  hooks:
+    rules: []
+    # Example configurations:
+    # rules:
+    #   - name: audit-all
+    #     phase: preToolCall
+    #     tool-pattern: "*"
+    #     action: log
+    #   - name: block-dangerous-bash
+    #     phase: preToolCall
+    #     tool-pattern: bash
+    #     action: veto
+    #     veto-reason: "Bash blocked by hook policy"
+    #     args-match: "rm\\s+-rf\\s+/"
+    #   - name: notify-mcp-calls
+    #     phase: postToolCall
+    #     tool-pattern: "mcp__*"
+    #     action: notify
+    #   - name: log-errors
+    #     phase: onError
+    #     action: log

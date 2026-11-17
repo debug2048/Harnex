@@ -1,0 +1,494 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  Harnex 私有覆盖配置模板（agent-config.example.yml）
+#
+#  使用方法：
+#
+#    Windows : copy agent-config.example.yml %USERPROFILE%\.harnex\agent-config.yml
+#    macOS/Linux: cp agent-config.example.yml ~/.harnex/agent-config.yml
+#
+#  `harnex serve`、Supervisor、桌面端和 VS Code 会从 userDataDir（默认 ~/.harnex）
+#  加载该用户级文档。项目目录中的同名 YAML 不作为隐式配置入口；workspace Memory、
+#  Skills 和 Automations 使用各自的显式控制面。
+#
+#  本文件中通常**只列你需要覆盖的项**——其它配置继承 jar 内置默认值
+#  （backend/src/main/resources/agent-config.yml + application.yml）。一旦声明 `providers`，该 Map 会整体
+#  替换低优先级文档的端点列表；请列全需要保留的端点。未声明时继承内置列表，profiles 仍可复用。
+#  示例条目都加了行内说明，可按需删改。
+#
+#  安全说明：用户级控制文档能改变 Agent 行为，因此 Runtime 的 file 工具不能写它；
+#  人类可在设置页或磁盘上编辑。
+# ─────────────────────────────────────────────────────────────────────────────
+
+harnex:
+  # 项目数据默认跟随项目磁盘，不集中写入 Windows 用户目录所在的 C 盘。
+  # 相对路径按实际项目根解析；显式的宿主项目目录设置 / 启动参数优先。
+  data-dir: .harnex/data
+  # 项目技能可随 Git 提交；data 目录会自动创建 .gitignore，请勿忽略整个 .harnex。
+  skills-dir: .harnex/skills
+  # 普通会话独立保存到 <用户目录>/personal，不使用项目 data-dir。
+  # 若也要移动普通会话和全局下载缓存，启动前设置 HARNEX_USER_DATA_DIR=D:/HarnexUserData。
+
+  # 普通命令使用当前 Runtime 的主机工具链；SSH 应通过 GUI/CLI 的远程工作区连接。
+  # 原生沙箱仅在任务需要时启用，执行位置、隔离与审批是独立设置。
+  # execution:
+  #   environment: host             # host | docker
+  #   sandbox-mode: none            # none | read-only | workspace-write
+  #   sandbox-network: deny         # 仅影响隔离命令/容器，普通 host 命令不受此项限制
+  #   sandbox-runtime: ""           # 可选 SRT 0.0.75 包目录；留空使用已安装的全局 srt
+  #   writable-roots: []            # 原生沙箱额外缓存/输出目录：已存在的绝对路径
+  #   image: debian:stable-slim      # Docker 镜像需自行准备项目工具链
+
+  # 可以将上面的 data-dir 改为专用绝对目录，例如 D:/HarnexData/my-project。
+  # 多项目不要共用同一个 data-dir；普通启动不会自动迁移旧目录。
+
+  # Agent 工作迭代上限；普通交互还受 ordinary-max-iterations 限制。
+  # max-iterations: 200
+  # ordinary-max-iterations: 64     # 普通交互上限；0 仅取消这一额外限制
+  # finalization-grace-iterations: 2 # 达到工作上限后用于整理结果的额外轮次
+
+  # Goal 总预算默认不限；未配置时继承下面的 0，仅设置正值才限制整个 Goal。
+  # 单步达到 max-iterations 后保存进度并续跑，不会因此耗尽 Goal 总预算。
+  # 已有 Goal 保留创建/修改时保存的预算；修改这里影响新建 Goal。
+  # goal:
+  #   max-turns: 0                # Goal 累计业务轮次上限；0 = 不限
+  #   default-token-budget: 0     # 累计 token 上限；0 = 不限，也可用 /goal ... +500k 单独设置
+  #   wall-clock-budget-ms: 0     # 累计活动时长（含验收）；0 = 不限
+
+  # 子 Agent：排队、进度检查点与硬执行上限分别计时，Agent 普通任务与 Goal 任务共用。
+  # timeout-ms=0 仅关闭本地硬上限，仍受父任务/Goal 预算约束。
+  # subagent:
+  #   max-iterations: 64          # 独立模型迭代上限，0 继承 max-iterations
+  #   soft-timeout-ms: 1200000    # 20 分钟：在下一安全点整理进度，随后恢复工具
+  #   timeout-ms: 0               # 默认不设本地执行时限；可显式设置毫秒数，父任务/Goal 预算仍生效
+  #   queue-timeout-ms: 120000    # 2 分钟：独立排队上限，必须为正数
+
+  # SSE 长连接超时（毫秒）。
+  # sse-timeout-ms: 3600000
+
+  # 第三方网页搜索：也可在“设置 → 网页搜索”填写、测试和保存，重启运行环境后生效。
+  # 仅供项目 Agent 在原生搜索未启用或不支持时使用；Personal 对话仍只使用原生搜索。
+  # web-search:
+  #   enabled: true
+  #   provider: tavily              # tavily | exa | brave | searxng | perplexity（Sonar）| anysearch | tinyfish
+  #   api-key: ${HARNEX_WEBSEARCH_KEY:} # SearXNG 无需填写
+  #   endpoint: ""                 # 默认留空；SearXNG 必填实例根地址，如 http://localhost:8888
+  #   max-results: 10               # 正整数；服务上限由官方 API 校验
+  #   language: ""                  # AnySearch/TinyFish 可选 zh/en；留空使用服务默认语言
+  #   timeout-ms: 15000             # 1000..120000
+
+  # MCP 外部工具服务器：stdio / sse / streamable-http（别名 http）。
+  # 取消注释并填入真实端点；servers 列表整体覆盖已有配置。
+  # mcp:
+  #   servers:
+  #     - name: remote-tools
+  #       transport: streamable-http
+  #       url: https://mcp.example.com/mcp
+  #       headers:
+  #         Authorization: Bearer ${MCP_TOKEN:}
+  #       expose-to-presets: [act]
+
+  # ─── Agent 项目 / 文件访问分区 ─────────────────────────────────────
+  # 普通会话使用 PERSONAL Runtime，不要求项目，也不注册项目 Agent 工具。
+  # Agent 使用 PROJECT Runtime，项目根按以下顺序解析：
+  #   workspace.root（或环境变量 HARNEX_WORKSPACE）→ 进程工作目录（user.dir）三级回退，绝不为 null。
+  # Agent 直接对真实工程根作业；项目运行数据与可共享的 .harnex/skills 分开保存。
+  #
+  # 留空 root 时锚点 = 进程启动目录（user.dir）。显式设置 workspace.root 即可对标 Claude Code / Cursor，
+  # 让 agent 直接对你打开的真实工程目录作业：
+  #   * 工程内 = GREEN：直接读写；
+  #   * 工程外非敏感 = YELLOW：读默认放行；写由 deny / ask / allow 三态策略决定；
+  #   * 命中 sensitive-globs = RED：一律拒绝（即便读）。
+  # 桌面版的“打开文件夹”选择器也会把所选目录写入 HARNEX_WORKSPACE。
+  #
+  # workspace:
+  #   root: D:/code/my-project        # 项目根绝对路径；留空=进程启动目录（user.dir）
+  #   outside-write-policy: ask       # 控制普通工程外写入；系统临时目录例外。deny=拒绝；ask=逐次审批（默认）；allow=跟随线程权限
+  #   search-exclude-globs:           # glob/grep 额外排除项，相对项目根；重启 Runtime 后生效
+  #     - "generated/**"
+  #     - "vendor-cache/**"
+  # 搜索默认跳过 .artifacts、node_modules、target 等产物目录；显式路径前缀可搜索这些目录。
+  # 上述额外排除项和私有运行数据权限始终生效；普通隐藏文件、.harnex/skills 仍可搜索。
+  # 不影响 file_read，也不会将 .gitignore 当成搜索排除规则。
+  #   sensitive-globs:                # RED 区（工程外）默认清单，覆盖即整体替换
+  #     - "**/.ssh/**"
+  #     - "**/.aws/**"
+  #     - "**/.gnupg/**"
+  #     - "**/.kube/**"
+  #     - "**/.docker/config.json"
+  #     - "**/.env"
+  #     - "**/.env.*"
+  #     - "**/*.pem"
+  #     - "**/*.key"
+  #     - "**/id_rsa"
+  #     - "**/id_ed25519"
+  #     - "**/.git/config"
+  #     - "**/.netrc"
+  #     - "**/.npmrc"
+  #     - "**/.pypirc"
+  #     - "**/.harnex/**"
+  #     - "**/.harness/**"
+  #     # macOS 用户隐私存储（仅工程外命中 RED）
+  #     - "**/Library/Keychains/**"
+  #     - "**/Library/Mail/**"
+  #     - "**/Library/Messages/**"
+  #     - "**/Library/Safari/**"
+  #     - "**/Library/Cookies/**"
+  #     - "**/Library/Containers/**"
+  #     - "**/Library/Group Containers/**"
+  #     - "**/Library/Mobile Documents/**"
+
+  # ─── 快照 / 撤销保险（文件级 rollback，不再整目录归档工程根）────────────
+  # snapshot:
+  #   conversation: true              # 是否捕获会话 manifest/messages/transcript/state/todos
+  #   file-rollback: true             # 是否捕获文件级 before blob，用于撤销写文件/编辑/bash 可识别副作用
+  #   strict-capture-for-writes: false # true=现有文件无法捕获 rollback 时拒绝 file_write；默认 false 更兼容
+  #   respect-gitignore: true         # honour the path's own gitignore；outside 路径只使用其最近 git repo
+  #   max-file-bytes: 5242880         # 单文件 blob 上限，默认 5 MB；超限会标记 skipped/partial
+  #   max-files-per-snapshot: 200     # 单 snapshot 捕获文件数上限
+  #   capture-timeout-ms: 1500        # 单次捕获预算，避免大文件/慢盘卡住工具调用
+  #   git-timeout-ms: 2000            # git diff/status 检测预算
+  #   max-snapshots-per-thread: 20    # 单 thread 保留 snapshot 数
+  #   total-disk-budget-bytes: 268435456 # 当前 data-dir 下 agent/snapshots 的磁盘预算，默认 256 MiB
+  #   protect-globs:                  # 即便被 .gitignore 命中，也优先纳入撤销保险
+  #     - ".env"
+  #     - ".env.*"
+  #     - "config/**/*.yml"
+  #     - "config/**/*.yaml"
+  #   exclude-globs:                  # 永不捕获的重型/可再生/VCS 目录和文件
+  #     - "**/node_modules/**"
+  #     - "**/.git/**"
+  #     - "**/target/**"
+  #     - "**/build/**"
+  #     - "**/dist/**"
+  #     - "**/.gradle/**"
+  #     - "**/.idea/**"
+  #     - "**/.vscode/**"
+  #     - "**/__pycache__/**"
+  #     - "**/.venv/**"
+  #     - "**/venv/**"
+  #     - "**/.next/**"
+  #     - "**/.cache/**"
+  #     - "**/*.log"
+  #     - "**/*.tmp"
+  #     - "**/*.pyc"
+  #     - "**/*.class"
+
+  # ─── 语言模型提供商（设置 → 模型 → 语言模型使用这些字段）──────────────
+  # 当前 YAML 一旦取消下面 `providers:` 的注释，就必须在同一 Map 中写全本文件要保留的所有端点；
+  # 它会整体替换 jar 等更低优先级 YAML 的 concrete providers，但仍可复用内置 profiles。
+  # Map key 是稳定路由 id；label 只是显示名。profile 一次性决定适配器、wire 能力，
+  # 厂商专用 profile 还可提供官方 endpoint/default-model 和内部能力候选目录。普通用户通常只需
+  # profile、API Key、default-model；自定义 endpoint 再填写 base-url。省略 models 时前端只展示
+  # default-model；平台开放多个型号时再显式列出有限集合，同 ID 会继承 profile 的元数据与能力。
+  # id 仅允许 1–64 位 ASCII 字母/数字/_/-；中文或空格请写入 label。
+  # openai-compatible 的最终配置必须有 base-url；openai-responses/anthropic/gemini 可用官方默认地址。
+  #
+  # providers:
+  #   my-openai:
+  #     label: 我的 OpenAI
+  #     profile: openai-responses
+  #     # enabled: true                         # false=保留配置但不加入运行时目录和路由
+  #     base-url: https://api.openai.com/v1
+  #     api-key: ${OPENAI_API_KEY:}             # 强烈建议用 ${ENV}，不要提交裸 key
+  #     default-model: gpt-6-astra              # Astra 的工具调用必须走 Responses
+  #     # proxy: off                            # URL 或 off/direct/none；省略=继承全局/环境代理
+  #     # max-tokens: 16384                     # 正数=显式上限；省略/0/负数=自动，不额外施加统一上限
+  #     # context-window: 256000         # 未声明模型容量时的 provider 默认窗口；模型配置优先
+  #     # models:
+  #     #   - { id: custom-model, context-window: 256000, max-output-tokens: 8192 }  # 按模型/部署说明填写窗口及最大输出
+  #
+  #   my-kimi:
+  #     label: 我的 Kimi
+  #     profile: moonshot-kimi-chat
+  #     api-key: ${MOONSHOT_API_KEY:}
+  #     default-model: kimi-k3
+  #     # features:                             # 全部可省略；默认 auto
+  #     #   attachments: auto                   # auto | on | off
+  #     #   prompt-cache: auto                  # auto | on | off
+  #     #   web-search: auto                    # auto/on=原生优先、不可用时保留已配置的本地搜索；off=禁用原生
+  #     #   reasoning: auto                     # auto | on | off
+  #     #   effort: auto                        # auto | none|minimal|low|medium|high|xhigh|max
+  #     #   reasoning-history: auto             # 高级：auto | preserve | discard
+  #
+  #   my-grok:
+  #     label: 我的 Grok
+  #     profile: xai-responses-grok45
+  #     api-key: ${XAI_API_KEY:}
+  #     default-model: grok-4.6
+  #
+  #   my-gemini:
+  #     label: 我的 Gemini
+  #     profile: gemini-interactions
+  #     api-key: ${GEMINI_API_KEY:}
+  #     default-model: gemini-3.8-flash         # effort: low | medium | high；不支持 minimal
+  #     # features:
+  #     #   effort: medium
+  #     #   web-search: on
+  #
+  #   my-claude:
+  #     profile: anthropic-messages
+  #     api-key: ${ANTHROPIC_API_KEY:}
+  #     default-model: claude-opus-5           # 也可选 claude-fable-5-1 / claude-sonnet-5
+  #
+  #   my-deepseek:
+  #     profile: deepseek-v4                  # 设置页显示 deepseek；YAML 使用此内部标识
+  #     base-url: https://api.deepseek.com/v1
+  #     api-key: ${DEEPSEEK_API_KEY:}
+  #     default-model: deepseek-flash
+  #
+  #   my-qwen:
+  #     profile: dashscope-qwen-chat
+  #     api-key: ${DASHSCOPE_API_KEY:}
+  #     default-model: qwen3.8-max             # 也可选 qwen3.8-flash
+  #
+  #   my-glm:
+  #     profile: zhipu-glm-chat
+  #     api-key: ${ZHIPU_API_KEY:}
+  #     default-model: glm-5.3                # glm-5.3-flash 支持图片输入
+  #     # 编程套餐使用专用地址；Z.ai 为 https://api.z.ai/api/coding/paas/v4
+  #     # base-url: https://open.bigmodel.cn/api/coding/paas/v4
+  #     # features: { effort: max }            # 5.3 仅 low/high/max，thinking 始终开启
+  #
+  #   my-spark:
+  #     profile: meta-muse-responses
+  #     api-key: ${META_MODEL_API_KEY:}
+  #     default-model: muse-spark-1.3          # 默认 Standard；Contributor 型号需用户显式选择
+  #     # features: { effort: high }
+  #
+  # default-model 是上游真实型号 ID；profile 负责协议和能力，不能替代型号选择。
+  # 语言模型费用使用 models 条目的 input-cost-per-million / output-cost-per-million 等数值。
+  # 未填写时费用未知；没有自动查询价格或单独倍率配置，应填写折算后的实际单价。
+  #
+  #   local-ollama:
+  #     label: 本地 Ollama
+  #     profile: openai-compatible-chat-safe    # 设置页显示“通用 Chat 兼容”
+  #     base-url: http://127.0.0.1:11434/v1
+  #     api-key: "ollama"
+  #     default-model: qwen2.5-coder:14b
+  #     proxy: off                              # 本机端点明确直连
+  #
+  # 普通 Chat 兼容中转站：通用预设仅发送基础参数，不请求流式用量、推理回传或缓存扩展。
+  # 确认完整支持 OpenAI Chat 约定时再用 openai-chat；Responses 接口用 openai-responses。
+  #   my-relay:
+  #     profile: openai-compatible-chat-safe
+  #     base-url: https://relay.example.com/v1
+  #     api-key: ${RELAY_KEY:}
+  #     default-model: gpt-5.6-terra
+  #
+  # 中转站若把官方 model 改成私有 alias，可用 capability-model 复用当前 profile 的
+  # 官方型号规则；id 仍原样发给上游。附件是 endpoint 事实，仍需显式确认：
+  #   my-alias-relay:
+  #     profile: openai-chat
+  #     base-url: https://relay.example.com/v1
+  #     api-key: ${RELAY_KEY:}
+  #     default-model: relay-gpt
+  #     models:
+  #       - { id: relay-gpt, capability-model: gpt-5.6-terra, input-modalities: [text, image, file] }
+  #
+  # 只有中转站严格校验官方客户端身份时才开启；普通 OpenAI/Anthropic 兼容站不要配置：
+  #     client-emulation: codex                 # openai-chat/openai-responses
+  #     client-version: 0.142.5                 # 可省略，使用内置默认版本
+  # Anthropic Messages 中转对应 client-emulation: claude-code。
+  #
+  # 设置页显示名 → YAML profile 标识（显示名不是配置别名）：
+  #   openai-chat        → openai-chat
+  #   openai-responses   → openai-responses
+  #   anthropic-messages → anthropic-messages
+  #   deepseek           → deepseek-v4
+  #   kimi               → moonshot-kimi-chat
+  #   grok               → xai-responses-grok45
+  #   gemini             → gemini-interactions
+  #   qwen               → dashscope-qwen-chat
+  #   glm                → zhipu-glm-chat
+  #   通用 Chat 兼容     → openai-compatible-chat-safe
+  # OpenAI/Kimi/Gemini/Qwen/GLM 的官方型号差异由各根 profile 的 model-capability-rules 自动匹配，
+  # 不作为可选择的独立 profile 暴露。
+  # 新型号仍使用对应厂商 profile，例如 openai-responses + gpt-6.1-sol、
+  # anthropic-messages + claude-opus-5-5 / claude-sonnet-5-5、
+  # xai-responses-grok45 + grok-4.7、dashscope-qwen-chat + qwen3.8-omni-flash。
+  # 2026-11-02 补充：gpt-6.1-terra、claude-haiku-5-5、gemini-4-argon、
+  # kimi-k3.1-pro / kimi-k3.1-pro-highspeed、glm-5.3-flashx / glm-5.3-flashx-legal、
+  # qwen3.8-27b / qwen3.8-2.4t-a95b，仍使用各自厂商 profile，按需显式选择。
+  # GPT-6 Astra/6.1 Sol/Terra 的工具调用必须走 Responses；Terra 额外支持 effort=none。
+  # GPT-6 Sol/Luna 在 Chat 有工具时要求 effort=none。
+  # Sonnet 5.5 的 reasoning: off 仅关闭前置思考（between_tools），工具间仍可能产生 thinking block；
+  # Opus 5.5 不能关闭思考。已验证型号以外的后续版本不会自动获得相同能力。
+  # Haiku 5.5 默认自适应思考，关闭时不能使用 xhigh/max；Kimi K3.1 和 GLM FlashX 不支持关闭思考。
+  # DeepSeek V4 Pro 与 Flash 均完整回传历史推理；固定旧快照的规则不变。
+  # Gemini 4 Argon 此处接入标准 Interactions；后台长输出的异步生命周期尚未接入。
+  #
+  # 只有维护者需要扩展 profile。profile 是内部接入模板，可包含安全的官方默认地址/型号/目录；
+  # provider 的非空字段始终覆盖这些默认值。profile key 使用同一稳定 id 规则：
+  # provider-profiles:
+  #   my-chat-profile:
+  #     label: my-chat-preset                  # 设置页显示名称
+  #     type: openai-compatible                 # openai-compatible | openai-responses | anthropic | gemini
+  #     instruction-role: system
+  #     max-tokens-field: max_tokens
+  #     streaming: true
+  #     function-tools: true
+  #     sampling-policy: always
+  #     reasoning-replay: never
+  #     prompt-cache-mode: none
+  #
+  # profile 内部可维护 model-capability-rules；精确 model 的 profile/capabilities 最后覆盖。
+  # 规则是有序、大小写不敏感的 full match，不能授予附件模态。
+
+  # router:
+  #   default-provider: ""                       # 空=用户 providers Map 中首个启用的非 fallback 端点
+  #   total-budget-ms: 60000
+
+  # ─── 图片模型（设置 → 模型 → 图片模型使用这些字段）──────────────────
+  # 独立配置自己的协议、URL、Key 和型号，不引用语言模型 provider。
+  # 将下面的整个配置块取消注释，填入服务实际支持的图片型号。
+  # image-services:
+  #   my-images:
+  #     label: 我的图片模型
+  #     profile: openai-images
+  #     base-url: https://api.openai.com/v1
+  #     api-key: ${IMAGE_API_KEY:}
+  #     model: ${IMAGE_MODEL:your-image-model}
+  # default-image-service: my-images
+
+  # Responses 生图也使用独立连接；main-model 是调用图片工具的主模型，model 是图片型号。
+  # image-services:
+  #   responses-images:
+  #     label: Responses 图片模型
+  #     profile: openai-responses-image
+  #     base-url: https://api.openai.com/v1
+  #     api-key: ${IMAGE_API_KEY:}
+  #     main-model: ${IMAGE_MAIN_MODEL:gpt-6-astra}
+  #     model: ${IMAGE_MODEL:your-image-model}
+  # default-image-service: responses-images
+
+  # Gemini 原生生图/参考图编辑：单次 1 张，无 mask；quality/background 使用 auto，输出 PNG。
+  # image-services:
+  #   gemini-images:
+  #     label: Gemini 图片
+  #     profile: gemini-images
+  #     base-url: https://generativelanguage.googleapis.com
+  #     api-key: ${GEMINI_API_KEY:}
+  #     model: gemini-nano-banana-2.1
+  # default-image-service: gemini-images
+
+  # Qwen 原生 DashScope 同步生图/编辑；实际工作空间和地域地址需从控制台获取。
+  # 不使用 compatible-mode URL，也不发送 X-DashScope-Async；不支持 mask。
+  # image-services:
+  #   qwen-images:
+  #     label: 千问图片
+  #     profile: dashscope-images
+  #     base-url: ${QWEN_IMAGE_BASE_URL:}       # https://<workspace>.<region>.maas.aliyuncs.com/api/v1
+  #     api-key: ${DASHSCOPE_API_KEY:}
+  #     model: qwen-image-2.1-pro
+  # default-image-service: qwen-images
+
+  # 图片 pricing 是可选的费用估算配置，可在“设置 → 计费设置”填写；留空不影响生图。
+  # 在对应图片模型下填写 pricing.currency 和 pricing.per-image（每张），
+  # 或 text-input-per-million / image-input-per-million / image-output-per-million（每百万 Token）。
+  # 按张和按 Token 二选一；费用以服务实际返回的用量和配置单价计算，不是服务商账单。
+
+  # ─── Summariser（结构化 continuation summary；模型需可靠）────────────
+  # 普通会话与 Agent 共用原文检索、token 核算和摘要结构校验。
+  # 自动历史召回按需触发，不额外调用模型；当前可见召回正文合计最多 2048 token，
+  # 同时受可用输入窗口 5% 和剩余空间约束。这是上下文体积控制，不是 Goal 总预算。
+  # Agent 内置 read/inspect/act/mcp 工具集包含 session_search + session_read；
+  # 自定义覆盖工具集时，应同时保留这两个工具，才能从命中片段继续读取原文。
+  # summarizer:
+  #   enabled: true
+  #   provider: primary                          # 专用摘要端点；留空 = 当前任务端点（失败再走 fallback）
+  #   model: gpt-4o-mini                         # provider/model 都留空时沿用当前任务模型
+  #   context-window: 128000               # 模型和 Provider 均未声明窗口时的回退值
+  #   output-reserve-tokens: 16000                # 未声明输出上限/预留时的回退值；显式上限完整预留
+  #   safety-reserve-tokens: 0                    # 可额外为工具 schema/供应商 envelope 预留
+  #   soft-threshold-percent: 75                  # usable window 的 75%：请求前/工具批后检查，须满足新增量门槛
+  #   hard-threshold-percent: 90                  # usable window 的 90%：请求模型前同步压缩
+  #   target-percent: 40                          # 压缩后理想占用；未达到但已释放足够空间也算有效
+  #   min-new-tokens: 16000                       # 压缩后至少新增这些 token 才允许再次主动压缩
+  #   min-new-context-percent: 15                 # 与上项取较小值，适配不同上下文窗口
+  #   minimum-reduction-percent: 20               # 仍高于 soft 时，降到 hard 内且至少缩减此比例也算有效
+  #   max-ineffective-compressions: 3             # 连续仍有容量压力且未有效腾空，才切到无工具总结
+  #   summary-max-chars: 24000                   # 保存的摘要正文上限；不含受保护原文、近期历史；最小 256
+  #   max-output-tokens: 16384                   # 摘要生成最高额度；实际按模型容量缩小，包含正文、事实候选及计入的推理
+  #   max-concurrent: 2                          # 独立 Run 可并行摘要；超出后立即使用确定性摘要
+  #   keep-tail: 0                               # 0 = 按 Token 预算保留；正数额外限制最近原文条数
+  #   keep-tail-chars: 0                         # 0 = 不限字符；原文始终受 Token 目标约束，工具调用/结果整组保留
+  #   timeout-ms: 180000                         # 本次压缩所有模型尝试共用的等待预算；耗尽后本地处理，任务继续
+  #   attempt-timeout-ms: 90000                  # 单次调用上限；仍受整次摘要和任务剩余时间限制
+  #   prefix-reuse: false                        # 可选试验：软水位且请求兼容/容量足够时复用主请求前缀；否则使用专用摘要提示
+
+  # ─── Tool 结果预算（UI 预览截断 vs. 发给模型的内容，二者解耦）──────────
+  # budget:
+  #   per-tool-chars: 8000                       # UI 预览：单工具结果超过即界面截断为 preview + ref:{sha}
+  #   per-turn-chars: 30000                      # UI 预览：单轮所有工具结果聚合上限
+  #   preview-chars: 1200                        # 截断后保留的预览片段长度
+  #   # 发给模型(LLM)的独立阈值——明显大于 UI 阈值，日常工具结果完整回传给模型；
+  #   # 仅当超过下列阈值时才对模型截断，并在标记里给出 ref:{sha} 供模型回读完整内容。
+  #   per-tool-chars-for-llm: 50000              # 超出会落盘并返回 ref，避免单个结果迅速填满上下文
+  #   per-turn-chars-for-llm: 80000              # 模型侧单轮聚合字符上限；0 = 关闭
+  #   per-tool-tokens-for-llm: 0                 # 模型侧单工具 token 上限；0 = 关闭(仅按字符)
+  #   per-turn-tokens-for-llm: 0                 # 模型侧单轮 token 上限；0 = 关闭
+
+  # ─── 审计（敏感行业 / 多人复审场景打开）─────────────────────────────
+  # audit:
+  #   enabled: true                              # 默认 false
+  #   retention-days: 90
+  #   max-message-chars: 200000
+  #   redact-secrets: true                       # 落盘前正则脱敏 sk-/ghp_/AKIA/Bearer 等
+  #
+  # safety:
+  #   # 工具结果脱敏开关。三层共用同一套 SecretRedactor 正则：SensitiveDataMiddleware（重新进
+  #   # 入 LLM 上下文的内存结果）、BudgetEnforcer（落盘到 <dataDir>/agent/tool-results/<tid>/<sha>.txt 的
+  #   # 超大结果）、LlmAuditLog（harnex.audit.enabled=true 时）。两个开关请在各部署间保持一致。
+  #   #
+  #   # secrets=API 密钥 / Bearer / 密码等（sk-、ghp_、AKIA、AIza、JWT、password=、api_key=…）。
+  #   # 默认 true，任何非玩具部署都应保持开启：脱敏后的文本才会回传给模型并落盘。
+  #   redact-secrets-in-tool-results: true       # 默认 true，与代码 @Value 默认值一致
+  #   # pii=手机号 / 身份证 / 邮箱 / 信用卡号。默认 false（OPT-IN）：这类信息常出现在正当的
+  #   # 用户请求里（如“查一下 alice@example.com 提的 issue”），误脱会影响可用性。仅合规级
+  #   # 部署（HR / 法务 / 医疗 / 金融）建议置 true；个人 / 开发环境保持关闭。
+  #   redact-pii-in-tool-results: false          # 默认 false，仅合规部署开启
+
+  # ─── 用户配置式 hook（无需写 Java，YAML 即生效）─────────────────────
+  # 详见 ConfigurableHookMiddleware，支持 phase=preToolCall|postToolCall|onError
+  # 和 action=log|veto|notify 三种动作。toolPattern 用 glob，argsMatch 用 regex。
+  #
+  # hooks:
+  #   rules:
+  #     - name: deny-rm-rf
+  #       phase: preToolCall
+  #       tool-pattern: bash
+  #       args-match: "rm\\s+-rf"
+  #       action: veto
+  #       veto-reason: "rm -rf is banned by policy"
+  #
+  #     - name: notify-on-file-write
+  #       phase: preToolCall
+  #       tool-pattern: "file_*"
+  #       action: notify
+  #
+  #     - name: audit-all-bash
+  #       phase: postToolCall
+  #       tool-pattern: bash
+  #       action: log
+
+  # ─── 网络代理（公司内网常用）──────────────────────────────────────
+  # http:
+  #   proxy: http://user:pass@proxy.corp:8080     # http/https/socks5；system=系统/PAC；off=显式直连
+  #   proxy-support: fallback                    # on | off | fallback（先直连 3s 探活）
+  #   proxy-bypass: ["*.internal", "*.corp"]
+
+  # ─── Agent Toolset（控制模型每轮能看到的工具列表）───────────────────
+  # 默认走 act（全做）；演示 / 复审场景可改 read 或 inspect。
+  # toolsets:
+  #   default-set: [act]
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  application.yml 类的覆盖也可以写到这里（同文件 Spring Boot 会按 key 合并）：
+#
+#  server:
+#    port: 9090
+#
+#  logging:
+#    level:
+#      com.harnex: DEBUG
+# ─────────────────────────────────────────────────────────────────────────────

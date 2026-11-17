@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security report / 安全漏洞报告
+    url: https://github.com/debug2048/Harnex/blob/main/SECURITY.md
+    about: Follow the private reporting instructions; do not disclose exploit details in an Issue. / 请按私密报告指引处理，不在 Issue 公开漏洞细节。
+  - name: Downloads and installation / 下载与安装
+    url: https://github.com/debug2048/Harnex/releases/latest
+    about: Choose the artifact for your operating system and CPU. / 选择匹配系统与 CPU 的发行包。

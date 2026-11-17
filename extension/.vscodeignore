@@ -1,0 +1,11 @@
+src/**
+node_modules/**
+esbuild.mjs
+tsconfig.json
+smoke.mjs
+test/**
+.vscode-test/**
+.e2e-*.log
+dist/*.map
+media/*.map
+**/.DS_Store

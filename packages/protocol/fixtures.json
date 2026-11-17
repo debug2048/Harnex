@@ -1,0 +1,1562 @@
+{
+  "event_text": {
+    "conversationId": "conversation_fixture",
+    "data": {
+      "text": "多语言 fixture"
+    },
+    "runId": "run_text",
+    "seq": 16,
+    "streamEpoch": 3,
+    "ts": 1,
+    "type": "text_delta"
+  },
+  "history_page": {
+    "activeLeafId": "history_3",
+    "historyRevision": 4,
+    "items": [
+      {
+        "contentParts": [
+          {
+            "text": "second answer",
+            "type": "TEXT"
+          }
+        ],
+        "createdAt": 1,
+        "messageId": "history_3",
+        "parentMessageId": "history_2",
+        "revisesMessageId": null,
+        "revision": 1,
+        "role": "ASSISTANT",
+        "runId": "history_run_1",
+        "schemaVersion": 1,
+        "status": "COMPLETED",
+        "turnId": "history_turn_1",
+        "updatedAt": 1
+      },
+      {
+        "contentParts": [
+          {
+            "text": "second question",
+            "type": "TEXT"
+          }
+        ],
+        "createdAt": 1,
+        "messageId": "history_2",
+        "parentMessageId": "history_1",
+        "revisesMessageId": null,
+        "revision": 1,
+        "role": "USER",
+        "runId": "history_run_1",
+        "schemaVersion": 1,
+        "status": "COMPLETED",
+        "turnId": "history_turn_1",
+        "updatedAt": 1
+      },
+      {
+        "contentParts": [
+          {
+            "text": "first answer",
+            "type": "TEXT"
+          }
+        ],
+        "createdAt": 1,
+        "messageId": "history_1",
+        "parentMessageId": "history_0",
+        "revisesMessageId": null,
+        "revision": 1,
+        "role": "ASSISTANT",
+        "runId": "history_run_0",
+        "schemaVersion": 1,
+        "status": "COMPLETED",
+        "turnId": "history_turn_0",
+        "updatedAt": 1
+      },
+      {
+        "contentParts": [
+          {
+            "text": "first question",
+            "type": "TEXT"
+          }
+        ],
+        "createdAt": 1,
+        "messageId": "history_0",
+        "parentMessageId": null,
+        "revisesMessageId": null,
+        "revision": 1,
+        "role": "USER",
+        "runId": "history_run_0",
+        "schemaVersion": 1,
+        "status": "COMPLETED",
+        "turnId": "history_turn_0",
+        "updatedAt": 1
+      }
+    ],
+    "nextCursor": null
+  },
+  "request_agent": {
+    "attachmentIds": null,
+    "channel": "contract",
+    "clientRequestId": "request_agent",
+    "conversationId": "conversation_fixture",
+    "execution": {
+      "ideContext": null,
+      "interactionTarget": "local-api",
+      "kind": "AGENT",
+      "limits": null,
+      "permissionMode": "ask",
+      "planReview": "AUTOMATIC",
+      "readOnly": false,
+      "text": {
+        "model": "text-model",
+        "provider": "fixture",
+        "reasoningEffort": null
+      },
+      "toolsets": [
+        "coding"
+      ]
+    },
+    "expectedHistoryRevision": 2,
+    "input": "Fixture question",
+    "notificationMode": null,
+    "parentMessageId": "message_parent",
+    "stream": false
+  },
+  "request_image_edit": {
+    "attachmentIds": null,
+    "channel": "contract",
+    "clientRequestId": "request_image_edit",
+    "conversationId": "conversation_fixture",
+    "execution": {
+      "action": "IMAGE_EDIT",
+      "image": {
+        "maskArtifactId": "artifact_mask",
+        "parameters": {
+          "background": null,
+          "count": null,
+          "format": null,
+          "quality": null,
+          "size": null
+        },
+        "serviceId": "image_fixture",
+        "sourceArtifactIds": [
+          "artifact_source"
+        ]
+      },
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": null
+    },
+    "expectedHistoryRevision": 2,
+    "input": "Fixture question",
+    "notificationMode": null,
+    "parentMessageId": "message_parent",
+    "stream": false
+  },
+  "request_image_generate": {
+    "attachmentIds": null,
+    "channel": "contract",
+    "clientRequestId": "request_image_generate",
+    "conversationId": "conversation_fixture",
+    "execution": {
+      "action": "IMAGE_GENERATE",
+      "image": {
+        "maskArtifactId": null,
+        "parameters": {
+          "background": null,
+          "count": 2,
+          "format": "png",
+          "quality": null,
+          "size": "1024x1024"
+        },
+        "serviceId": "image_fixture",
+        "sourceArtifactIds": []
+      },
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": null
+    },
+    "expectedHistoryRevision": 2,
+    "input": "Fixture question",
+    "notificationMode": null,
+    "parentMessageId": "message_parent",
+    "stream": false
+  },
+  "request_text": {
+    "attachmentIds": null,
+    "channel": "contract",
+    "clientRequestId": "request_text",
+    "conversationId": "conversation_fixture",
+    "execution": {
+      "action": "TEXT",
+      "image": null,
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": {
+        "model": "text-model",
+        "provider": "fixture",
+        "reasoningEffort": null
+      }
+    },
+    "expectedHistoryRevision": 2,
+    "input": "Fixture question",
+    "notificationMode": null,
+    "parentMessageId": "message_parent",
+    "stream": false
+  },
+  "run_agent_completed": {
+    "activities": [],
+    "allowedActions": [],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "ideContext": null,
+      "interactionTarget": "local-api",
+      "kind": "AGENT",
+      "limits": null,
+      "permissionMode": "ask",
+      "planReview": "AUTOMATIC",
+      "readOnly": false,
+      "text": {
+        "model": "text-model",
+        "provider": "fixture",
+        "reasoningEffort": null
+      },
+      "toolsets": [
+        "coding"
+      ]
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": false,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_agent",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "COMPLETED",
+    "subagents": [],
+    "terminal": true,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_agent_failed": {
+    "activities": [],
+    "allowedActions": [],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "ideContext": null,
+      "interactionTarget": "local-api",
+      "kind": "AGENT",
+      "limits": null,
+      "permissionMode": "ask",
+      "planReview": "AUTOMATIC",
+      "readOnly": false,
+      "text": {
+        "model": "text-model",
+        "provider": "fixture",
+        "reasoningEffort": null
+      },
+      "toolsets": [
+        "coding"
+      ]
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": false,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_agent",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "FAILED",
+    "subagents": [],
+    "terminal": true,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_agent_incomplete": {
+    "activities": [],
+    "allowedActions": [],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "ideContext": null,
+      "interactionTarget": "local-api",
+      "kind": "AGENT",
+      "limits": null,
+      "permissionMode": "ask",
+      "planReview": "AUTOMATIC",
+      "readOnly": false,
+      "text": {
+        "model": "text-model",
+        "provider": "fixture",
+        "reasoningEffort": null
+      },
+      "toolsets": [
+        "coding"
+      ]
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": false,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_agent",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "INCOMPLETE",
+    "subagents": [],
+    "terminal": true,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_agent_paused": {
+    "activities": [],
+    "allowedActions": [
+      "cancel"
+    ],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "ideContext": null,
+      "interactionTarget": "local-api",
+      "kind": "AGENT",
+      "limits": null,
+      "permissionMode": "ask",
+      "planReview": "AUTOMATIC",
+      "readOnly": false,
+      "text": {
+        "model": "text-model",
+        "provider": "fixture",
+        "reasoningEffort": null
+      },
+      "toolsets": [
+        "coding"
+      ]
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": true,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_agent",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "PAUSED",
+    "subagents": [],
+    "terminal": false,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_agent_queued": {
+    "activities": [],
+    "allowedActions": [
+      "cancel"
+    ],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "ideContext": null,
+      "interactionTarget": "local-api",
+      "kind": "AGENT",
+      "limits": null,
+      "permissionMode": "ask",
+      "planReview": "AUTOMATIC",
+      "readOnly": false,
+      "text": {
+        "model": "text-model",
+        "provider": "fixture",
+        "reasoningEffort": null
+      },
+      "toolsets": [
+        "coding"
+      ]
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": true,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_agent",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "QUEUED",
+    "subagents": [],
+    "terminal": false,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_agent_running": {
+    "activities": [],
+    "allowedActions": [
+      "cancel"
+    ],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": true,
+    "executionSpec": {
+      "ideContext": null,
+      "interactionTarget": "local-api",
+      "kind": "AGENT",
+      "limits": null,
+      "permissionMode": "ask",
+      "planReview": "AUTOMATIC",
+      "readOnly": false,
+      "text": {
+        "model": "text-model",
+        "provider": "fixture",
+        "reasoningEffort": null
+      },
+      "toolsets": [
+        "coding"
+      ]
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": true,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_agent",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "RUNNING",
+    "subagents": [],
+    "terminal": false,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_image_edit_completed": {
+    "activities": [],
+    "allowedActions": [],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "action": "IMAGE_EDIT",
+      "image": {
+        "maskArtifactId": "artifact_mask",
+        "parameters": {
+          "background": null,
+          "count": null,
+          "format": null,
+          "quality": null,
+          "size": null
+        },
+        "serviceId": "image_fixture",
+        "sourceArtifactIds": [
+          "artifact_source"
+        ]
+      },
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": null
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": false,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_image_edit",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "COMPLETED",
+    "subagents": [],
+    "terminal": true,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_image_edit_failed": {
+    "activities": [],
+    "allowedActions": [],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "action": "IMAGE_EDIT",
+      "image": {
+        "maskArtifactId": "artifact_mask",
+        "parameters": {
+          "background": null,
+          "count": null,
+          "format": null,
+          "quality": null,
+          "size": null
+        },
+        "serviceId": "image_fixture",
+        "sourceArtifactIds": [
+          "artifact_source"
+        ]
+      },
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": null
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": false,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_image_edit",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "FAILED",
+    "subagents": [],
+    "terminal": true,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_image_edit_incomplete": {
+    "activities": [],
+    "allowedActions": [],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "action": "IMAGE_EDIT",
+      "image": {
+        "maskArtifactId": "artifact_mask",
+        "parameters": {
+          "background": null,
+          "count": null,
+          "format": null,
+          "quality": null,
+          "size": null
+        },
+        "serviceId": "image_fixture",
+        "sourceArtifactIds": [
+          "artifact_source"
+        ]
+      },
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": null
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": false,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_image_edit",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "INCOMPLETE",
+    "subagents": [],
+    "terminal": true,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_image_edit_paused": {
+    "activities": [],
+    "allowedActions": [
+      "cancel"
+    ],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "action": "IMAGE_EDIT",
+      "image": {
+        "maskArtifactId": "artifact_mask",
+        "parameters": {
+          "background": null,
+          "count": null,
+          "format": null,
+          "quality": null,
+          "size": null
+        },
+        "serviceId": "image_fixture",
+        "sourceArtifactIds": [
+          "artifact_source"
+        ]
+      },
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": null
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": true,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_image_edit",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "PAUSED",
+    "subagents": [],
+    "terminal": false,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_image_edit_queued": {
+    "activities": [],
+    "allowedActions": [
+      "cancel"
+    ],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "action": "IMAGE_EDIT",
+      "image": {
+        "maskArtifactId": "artifact_mask",
+        "parameters": {
+          "background": null,
+          "count": null,
+          "format": null,
+          "quality": null,
+          "size": null
+        },
+        "serviceId": "image_fixture",
+        "sourceArtifactIds": [
+          "artifact_source"
+        ]
+      },
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": null
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": true,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_image_edit",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "QUEUED",
+    "subagents": [],
+    "terminal": false,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_image_edit_running": {
+    "activities": [],
+    "allowedActions": [
+      "cancel"
+    ],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": true,
+    "executionSpec": {
+      "action": "IMAGE_EDIT",
+      "image": {
+        "maskArtifactId": "artifact_mask",
+        "parameters": {
+          "background": null,
+          "count": null,
+          "format": null,
+          "quality": null,
+          "size": null
+        },
+        "serviceId": "image_fixture",
+        "sourceArtifactIds": [
+          "artifact_source"
+        ]
+      },
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": null
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": true,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_image_edit",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "RUNNING",
+    "subagents": [],
+    "terminal": false,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_image_generate_completed": {
+    "activities": [],
+    "allowedActions": [],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "action": "IMAGE_GENERATE",
+      "image": {
+        "maskArtifactId": null,
+        "parameters": {
+          "background": null,
+          "count": 2,
+          "format": "png",
+          "quality": null,
+          "size": "1024x1024"
+        },
+        "serviceId": "image_fixture",
+        "sourceArtifactIds": []
+      },
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": null
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": false,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_image_generate",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "COMPLETED",
+    "subagents": [],
+    "terminal": true,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_image_generate_failed": {
+    "activities": [],
+    "allowedActions": [],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "action": "IMAGE_GENERATE",
+      "image": {
+        "maskArtifactId": null,
+        "parameters": {
+          "background": null,
+          "count": 2,
+          "format": "png",
+          "quality": null,
+          "size": "1024x1024"
+        },
+        "serviceId": "image_fixture",
+        "sourceArtifactIds": []
+      },
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": null
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": false,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_image_generate",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "FAILED",
+    "subagents": [],
+    "terminal": true,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_image_generate_incomplete": {
+    "activities": [],
+    "allowedActions": [],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "action": "IMAGE_GENERATE",
+      "image": {
+        "maskArtifactId": null,
+        "parameters": {
+          "background": null,
+          "count": 2,
+          "format": "png",
+          "quality": null,
+          "size": "1024x1024"
+        },
+        "serviceId": "image_fixture",
+        "sourceArtifactIds": []
+      },
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": null
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": false,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_image_generate",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "INCOMPLETE",
+    "subagents": [],
+    "terminal": true,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_image_generate_paused": {
+    "activities": [],
+    "allowedActions": [
+      "cancel"
+    ],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "action": "IMAGE_GENERATE",
+      "image": {
+        "maskArtifactId": null,
+        "parameters": {
+          "background": null,
+          "count": 2,
+          "format": "png",
+          "quality": null,
+          "size": "1024x1024"
+        },
+        "serviceId": "image_fixture",
+        "sourceArtifactIds": []
+      },
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": null
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": true,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_image_generate",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "PAUSED",
+    "subagents": [],
+    "terminal": false,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_image_generate_queued": {
+    "activities": [],
+    "allowedActions": [
+      "cancel"
+    ],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "action": "IMAGE_GENERATE",
+      "image": {
+        "maskArtifactId": null,
+        "parameters": {
+          "background": null,
+          "count": 2,
+          "format": "png",
+          "quality": null,
+          "size": "1024x1024"
+        },
+        "serviceId": "image_fixture",
+        "sourceArtifactIds": []
+      },
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": null
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": true,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_image_generate",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "QUEUED",
+    "subagents": [],
+    "terminal": false,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_image_generate_running": {
+    "activities": [],
+    "allowedActions": [
+      "cancel"
+    ],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": true,
+    "executionSpec": {
+      "action": "IMAGE_GENERATE",
+      "image": {
+        "maskArtifactId": null,
+        "parameters": {
+          "background": null,
+          "count": 2,
+          "format": "png",
+          "quality": null,
+          "size": "1024x1024"
+        },
+        "serviceId": "image_fixture",
+        "sourceArtifactIds": []
+      },
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": null
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": true,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_image_generate",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "RUNNING",
+    "subagents": [],
+    "terminal": false,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_text_completed": {
+    "activities": [],
+    "allowedActions": [],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "action": "TEXT",
+      "image": null,
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": {
+        "model": "text-model",
+        "provider": "fixture",
+        "reasoningEffort": null
+      }
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": false,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_text",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "COMPLETED",
+    "subagents": [],
+    "terminal": true,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_text_failed": {
+    "activities": [],
+    "allowedActions": [],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "action": "TEXT",
+      "image": null,
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": {
+        "model": "text-model",
+        "provider": "fixture",
+        "reasoningEffort": null
+      }
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": false,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_text",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "FAILED",
+    "subagents": [],
+    "terminal": true,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_text_incomplete": {
+    "activities": [],
+    "allowedActions": [],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "action": "TEXT",
+      "image": null,
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": {
+        "model": "text-model",
+        "provider": "fixture",
+        "reasoningEffort": null
+      }
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": false,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_text",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "INCOMPLETE",
+    "subagents": [],
+    "terminal": true,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_text_paused": {
+    "activities": [],
+    "allowedActions": [
+      "cancel"
+    ],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "action": "TEXT",
+      "image": null,
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": {
+        "model": "text-model",
+        "provider": "fixture",
+        "reasoningEffort": null
+      }
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": true,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_text",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "PAUSED",
+    "subagents": [],
+    "terminal": false,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_text_queued": {
+    "activities": [],
+    "allowedActions": [
+      "cancel"
+    ],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": false,
+    "executionSpec": {
+      "action": "TEXT",
+      "image": null,
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": {
+        "model": "text-model",
+        "provider": "fixture",
+        "reasoningEffort": null
+      }
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": true,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_text",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "QUEUED",
+    "subagents": [],
+    "terminal": false,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  },
+  "run_text_running": {
+    "activities": [],
+    "allowedActions": [
+      "cancel"
+    ],
+    "cancelRequested": false,
+    "controlState": "CONTINUE",
+    "conversationId": "conversation_fixture",
+    "createdAt": 1,
+    "executing": true,
+    "executionSpec": {
+      "action": "TEXT",
+      "image": null,
+      "imageServiceId": null,
+      "kind": "CONVERSATION",
+      "text": {
+        "model": "text-model",
+        "provider": "fixture",
+        "reasoningEffort": null
+      }
+    },
+    "lastSeq": 15,
+    "origin": {
+      "kind": "CLIENT",
+      "reference": null
+    },
+    "ownsConversation": true,
+    "pendingInputCount": 0,
+    "providerAttempts": [],
+    "revision": 4,
+    "runId": "run_text",
+    "schemaVersion": 3,
+    "scopeId": "scope_fixture",
+    "status": "RUNNING",
+    "subagents": [],
+    "terminal": false,
+    "turnId": "turn_fixture",
+    "usage": {
+      "cacheWriteInput": 0,
+      "cachedInput": 0,
+      "complete": true,
+      "completion": 4,
+      "estimated": false,
+      "events": 0,
+      "expectedEvents": 0,
+      "partial": false,
+      "prompt": 8,
+      "reasoning": 0,
+      "taskEvents": 0,
+      "total": 12
+    }
+  }
+}

@@ -1,0 +1,167 @@
+name: Build native release assets
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to build without moving it
+        required: true
+        default: v1.0.0
+        type: string
+      platforms:
+        description: Native platforms to build and verify
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - unix
+          - windows
+          - macos
+          - linux
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-release-${{ inputs.tag }}-${{ inputs.platforms }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Resolve immutable release source
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.source.outputs.version }}
+      commit: ${{ steps.source.outputs.commit }}
+      matrix: ${{ steps.source.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: .ci
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate tag, version and platform selection
+        id: source
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+          RELEASE_PLATFORMS: ${{ inputs.platforms }}
+        run: node .ci/.github/scripts/release-matrix.mjs
+
+  build:
+    name: Build and verify ${{ matrix.target }}
+    needs: plan
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: source
+    env:
+      RELEASE_TARGET: ${{ matrix.target }}
+      RELEASE_VERSION: ${{ needs.plan.outputs.version }}
+      RELEASE_COMMIT: ${{ needs.plan.outputs.commit }}
+      HARNEX_NO_SHORTCUT: '1'
+      HARNEX_NO_PAUSE: '1'
+      VITE_OPEN_BROWSER: '0'
+      CARGO_BUILD_JOBS: '2'
+      CARGO_INCREMENTAL: '0'
+      MACOSX_DEPLOYMENT_TARGET: '13.0'
+      APPLE_SIGNING_IDENTITY: ${{ startsWith(matrix.target, 'darwin-') && '-' || '' }}
+      APPIMAGE_EXTRACT_AND_RUN: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: .ci
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.commit }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+          cache-dependency-path: source/backend/pom.xml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            source/frontend/package-lock.json
+            source/extension/package-lock.json
+      - name: Use the verified npm version
+        run: npm install --global npm@10.9.4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.88.0'
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: release-${{ matrix.target }}
+          workspaces: |
+            source/src-cli -> target
+            source/src-tauri -> target
+      - uses: actions/setup-python@v5
+        if: runner.os != 'Windows'
+        with:
+          python-version: '3.12'
+      - name: Install Linux desktop dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file \
+            libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf rpm
+      - name: Verify source and native architecture
+        run: |
+          test "$(git rev-parse HEAD)" = "$RELEASE_COMMIT"
+          node -e 'if (process.platform + "-" + process.arch !== process.env.RELEASE_TARGET) process.exit(1)'
+      - name: Build desktop, Runtime, CLI and VSIX packages
+        run: |
+          set -euo pipefail
+          mkdir -p .artifacts/release-build
+          if [[ "$RELEASE_TARGET" == linux-* ]]; then
+            chmod +x ../.ci/.github/scripts/linuxdeploy-patchelf.py
+            export PATCHELF="$GITHUB_WORKSPACE/.ci/.github/scripts/linuxdeploy-patchelf.py"
+            export NO_STRIP=1
+            export LD_LIBRARY_PATH="$PWD/src-tauri/resources/jre/lib/server:$PWD/src-tauri/resources/jre/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          fi
+          npm run build:dist 2>&1 | tee ".artifacts/release-build/$RELEASE_TARGET.log"
+      - name: Verify Runtime bundle integrity
+        run: node scripts/build/runtime-bundle.mjs --verify "dist/offline/$RELEASE_VERSION-$RELEASE_TARGET/portable/runtime" --target "$RELEASE_TARGET"
+      - name: Verify embedded AppImage Runtime
+        if: runner.os == 'Linux'
+        run: node ../.ci/.github/scripts/verify-linux-appimage.mjs
+      - name: Stage versioned release assets
+        run: GITHUB_SHA="$RELEASE_COMMIT" node scripts/build/release-assets.mjs --target "$RELEASE_TARGET"
+      - name: Upload verified platform assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ needs.plan.outputs.version }}-${{ matrix.target }}
+          path: source/dist/release/${{ needs.plan.outputs.version }}/${{ matrix.target }}/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+      - name: Upload failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostics-${{ matrix.target }}
+          path: |
+            source/.artifacts/release-build/*.log
+            source/.artifacts/appimage-check/*.log
+            source/.artifacts/appimage-check/result.json
+          if-no-files-found: ignore
+          retention-days: 7

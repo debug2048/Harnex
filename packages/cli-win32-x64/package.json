@@ -1,0 +1,9 @@
+{
+  "name": "@harnex/cli-win32-x64",
+  "version": "1.0.0",
+  "description": "Harnex native CLI/TUI and SSH connection host for Windows x64",
+  "license": "Apache-2.0",
+  "os": ["win32"],
+  "cpu": ["x64"],
+  "files": ["bin/harnex.exe", "README.md", "LICENSE"]
+}

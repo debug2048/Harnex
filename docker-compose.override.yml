@@ -1,0 +1,13 @@
+# Default GitHub/source installation: build locally without a Harnex image registry.
+# Offline packages ship only docker-compose.yml.
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    pull_policy: build
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    pull_policy: build

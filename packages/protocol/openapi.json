@@ -1,0 +1,7901 @@
+{
+  "components": {
+    "schemas": {
+      "AgentExecutionOptions": {
+        "properties": {
+          "interactionTarget": {
+            "type": "string"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/StepLimits"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/PermissionContext"
+          },
+          "planReview": {
+            "enum": [
+              "REQUIRED",
+              "AUTOMATIC"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "AgentSpec": {
+        "additionalProperties": false,
+        "properties": {
+          "ideContext": {
+            "type": "string"
+          },
+          "interactionTarget": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "AGENT"
+            ],
+            "type": "string"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/Limits"
+          },
+          "permissionMode": {
+            "type": "string"
+          },
+          "planReview": {
+            "enum": [
+              "REQUIRED",
+              "AUTOMATIC"
+            ],
+            "type": "string"
+          },
+          "readOnly": {
+            "type": "boolean"
+          },
+          "text": {
+            "$ref": "#/components/schemas/TextTarget"
+          },
+          "toolsets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "type": "object"
+      },
+      "ArtifactRecord": {
+        "properties": {
+          "artifactId": {
+            "type": "string"
+          },
+          "availability": {
+            "enum": [
+              "LOCAL",
+              "UNAVAILABLE"
+            ],
+            "type": "string"
+          },
+          "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "checksum": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "creator": {
+            "$ref": "#/components/schemas/Creator"
+          },
+          "height": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "mime": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "schemaVersion": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "scopeId": {
+            "type": "string"
+          },
+          "sourceRefs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "width": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "artifactId",
+          "availability",
+          "bytes",
+          "checksum",
+          "createdAt",
+          "creator",
+          "mime",
+          "name",
+          "schemaVersion",
+          "scopeId",
+          "sourceRefs"
+        ],
+        "type": "object"
+      },
+      "ArtifactUpdate": {
+        "properties": {
+          "artifactId": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Attempt": {
+        "properties": {
+          "acceptance": {
+            "enum": [
+              "NOT_SENT",
+              "SENT_UNKNOWN",
+              "ACCEPTED",
+              "REJECTED",
+              "OUTPUT_RECEIVED",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "attemptId": {
+            "type": "string"
+          },
+          "contextPlanId": {
+            "type": "string"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "finishedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "firstOutputAfterMillis": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "index": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "model": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "retryAfterMillis": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "startedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "state": {
+            "enum": [
+              "RUNNING",
+              "SUCCEEDED",
+              "FAILED",
+              "CANCELLED",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "timings": {
+            "additionalProperties": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "type": "object"
+          },
+          "upstreamRequestId": {
+            "type": "string"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/ProviderTokenUsage"
+          }
+        },
+        "type": "object"
+      },
+      "AutomationAttempt": {
+        "properties": {
+          "cancelRequested": {
+            "type": "boolean"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "finishedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "jobId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "ownerPid": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "ownerStartedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "startedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "status": {
+            "type": "string"
+          },
+          "target": {
+            "$ref": "#/components/schemas/AutomationTarget"
+          },
+          "task": {
+            "$ref": "#/components/schemas/CronJob"
+          },
+          "trigger": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "AutomationChange": {
+        "properties": {
+          "added": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "path": {
+            "type": "string"
+          },
+          "removed": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "AutomationExecutionRequest": {
+        "properties": {
+          "allowMutations": {
+            "type": "boolean"
+          },
+          "attemptId": {
+            "type": "string"
+          },
+          "jobId": {
+            "type": "string"
+          },
+          "maxWorkIterations": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "model": {
+            "type": "string"
+          },
+          "notificationMode": {
+            "enum": [
+              "OFF",
+              "ALL",
+              "FAILURES"
+            ],
+            "type": "string"
+          },
+          "planReview": {
+            "enum": [
+              "REQUIRED",
+              "AUTOMATIC"
+            ],
+            "type": "string"
+          },
+          "profile": {
+            "enum": [
+              "PERSONAL",
+              "PROJECT"
+            ],
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "toolsets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "AutomationExecutionResult": {
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/AutomationChange"
+            },
+            "type": "array"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "finishedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "output": {
+            "type": "string"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "startedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "status": {
+            "type": "string"
+          },
+          "terminal": {
+            "type": "boolean"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/UsageSummary"
+          }
+        },
+        "type": "object"
+      },
+      "AutomationExecutionStart": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "runId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "AutomationTarget": {
+        "properties": {
+          "connectionId": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "profile": {
+            "enum": [
+              "PERSONAL",
+              "PROJECT"
+            ],
+            "type": "string"
+          },
+          "root": {
+            "type": "string"
+          },
+          "scopeId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "AutomationTargetView": {
+        "properties": {
+          "online": {
+            "type": "boolean"
+          },
+          "target": {
+            "$ref": "#/components/schemas/AutomationTarget"
+          }
+        },
+        "type": "object"
+      },
+      "Branch": {
+        "properties": {
+          "commandId": {
+            "type": "string"
+          },
+          "expectedHistoryRevision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "leafId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Catalog": {
+        "properties": {
+          "defaultServiceId": {
+            "type": "string"
+          },
+          "services": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceView"
+            },
+            "type": "array"
+          },
+          "state": {
+            "enum": [
+              "UNCONFIGURED",
+              "UNSUPPORTED",
+              "CONFIGURED_UNVERIFIED",
+              "AVAILABLE",
+              "TEMPORARILY_UNAVAILABLE"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CommitReceipt": {
+        "properties": {
+          "conversationId": {
+            "type": "string"
+          },
+          "historyRevision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "TURN_ACCEPTED",
+              "ANSWER_CHECKPOINT",
+              "AGENT_STEP_COMMITTED",
+              "RESULT_COMMITTED",
+              "MESSAGE_REVISED",
+              "BRANCH_SELECTED",
+              "CONVERSATION_FORKED",
+              "METADATA_UPDATED",
+              "CONVERSATION_DELETED",
+              "EXECUTION_RECORD_COMMITTED",
+              "RUN_STATE_UPDATED",
+              "RUN_INPUT_COMMITTED"
+            ],
+            "type": "string"
+          },
+          "messageIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "operationId": {
+            "type": "string"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "turnId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CompletionRequest": {
+        "properties": {
+          "evidence": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "note": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "submittedAt": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ContentPart": {
+        "properties": {
+          "artifactId": {
+            "type": "string"
+          },
+          "imageOperationId": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "TEXT",
+              "ARTIFACT_REF",
+              "IMAGE_OPERATION_REF"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ContextBlock": {
+        "properties": {
+          "contentHash": {
+            "type": "string"
+          },
+          "estimatedTokens": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "included": {
+            "type": "boolean"
+          },
+          "omissionReason": {
+            "type": "string"
+          },
+          "sourceKind": {
+            "type": "string"
+          },
+          "sourceRef": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "contentHash",
+          "estimatedTokens",
+          "included",
+          "sourceKind",
+          "sourceRef"
+        ],
+        "type": "object"
+      },
+      "ContextPlan": {
+        "properties": {
+          "attemptId": {
+            "type": "string"
+          },
+          "blocks": {
+            "items": {
+              "$ref": "#/components/schemas/ContextBlock"
+            },
+            "type": "array"
+          },
+          "callId": {
+            "type": "string"
+          },
+          "capturedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "contextPlanId": {
+            "type": "string"
+          },
+          "estimateMethod": {
+            "type": "string"
+          },
+          "estimatedTokens": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "inputBudget": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "leafId": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "outputReserve": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "policyVersion": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "safetyReserve": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "sourceMessageIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "summaryId": {
+            "type": "string"
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "blocks",
+          "contextPlanId",
+          "estimateMethod",
+          "estimatedTokens",
+          "inputBudget",
+          "model",
+          "outputReserve",
+          "policyVersion",
+          "provider",
+          "runId",
+          "safetyReserve",
+          "sourceMessageIds",
+          "truncated"
+        ],
+        "type": "object"
+      },
+      "Control": {
+        "properties": {
+          "clientRequestId": {
+            "type": "string"
+          },
+          "interactionTarget": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ConversationMeta": {
+        "properties": {
+          "activeLeafId": {
+            "type": "string"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "defaults": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AgentSpec"
+              },
+              {
+                "$ref": "#/components/schemas/ConversationSpec"
+              }
+            ]
+          },
+          "deleted": {
+            "type": "boolean"
+          },
+          "historyRevision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "latestRunId": {
+            "type": "string"
+          },
+          "latestRunStatus": {
+            "type": "string"
+          },
+          "messageCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "metadataRevision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "preview": {
+            "type": "string"
+          },
+          "schemaVersion": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "scopeId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "conversationId",
+          "createdAt",
+          "deleted",
+          "historyRevision",
+          "messageCount",
+          "metadataRevision",
+          "schemaVersion",
+          "scopeId",
+          "title",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "ConversationSpec": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "TEXT",
+              "AUTO",
+              "IMAGE_GENERATE",
+              "IMAGE_EDIT"
+            ],
+            "type": "string"
+          },
+          "image": {
+            "$ref": "#/components/schemas/ImageSpec"
+          },
+          "imageServiceId": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "CONVERSATION"
+            ],
+            "type": "string"
+          },
+          "text": {
+            "$ref": "#/components/schemas/TextTarget"
+          }
+        },
+        "required": [
+          "action",
+          "kind"
+        ],
+        "type": "object"
+      },
+      "CostView": {
+        "properties": {
+          "amount": {
+            "format": "double",
+            "type": "number"
+          },
+          "calculatedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "known": {
+            "type": "boolean"
+          },
+          "model": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Creator": {
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "operationId": {
+            "type": "string"
+          },
+          "runId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CriterionResult": {
+        "properties": {
+          "checkedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "criterionId": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "evidence": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "status": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "REVIEW_REQUIRED"
+            ],
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CronJob": {
+        "properties": {
+          "allowMutations": {
+            "type": "boolean"
+          },
+          "cron": {
+            "type": "string"
+          },
+          "disabled": {
+            "type": "boolean"
+          },
+          "failureCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "lastFailureAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "lastFailureReason": {
+            "type": "string"
+          },
+          "lastRunAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "lastRunId": {
+            "type": "string"
+          },
+          "lastSkipAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "lastStatus": {
+            "type": "string"
+          },
+          "maxWorkIterations": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "model": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "notificationMode": {
+            "enum": [
+              "OFF",
+              "ALL",
+              "FAILURES"
+            ],
+            "type": "string"
+          },
+          "planReview": {
+            "enum": [
+              "REQUIRED",
+              "AUTOMATIC"
+            ],
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "runCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "skipCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "targetId": {
+            "type": "string"
+          },
+          "timeZone": {
+            "type": "string"
+          },
+          "toolsets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "CronJobView": {
+        "properties": {
+          "allowMutations": {
+            "type": "boolean"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "cron": {
+            "type": "string"
+          },
+          "disabled": {
+            "type": "boolean"
+          },
+          "failureCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "lastFailureAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "lastFailureReason": {
+            "type": "string"
+          },
+          "lastRunAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "lastRunId": {
+            "type": "string"
+          },
+          "lastSkipAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "lastStatus": {
+            "type": "string"
+          },
+          "maxWorkIterations": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "model": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "nextRunAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "notificationMode": {
+            "enum": [
+              "OFF",
+              "ALL",
+              "FAILURES"
+            ],
+            "type": "string"
+          },
+          "pending": {
+            "type": "boolean"
+          },
+          "persistenceError": {
+            "type": "string"
+          },
+          "planReview": {
+            "enum": [
+              "REQUIRED",
+              "AUTOMATIC"
+            ],
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "runCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "running": {
+            "type": "boolean"
+          },
+          "skipCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "target": {
+            "$ref": "#/components/schemas/AutomationTarget"
+          },
+          "targetOnline": {
+            "type": "boolean"
+          },
+          "timeZone": {
+            "type": "string"
+          },
+          "toolsets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "waitingReason": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Delete": {
+        "properties": {
+          "commandId": {
+            "type": "string"
+          },
+          "expectedHistoryRevision": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "DiagnosticStatus": {
+        "properties": {
+          "droppedWrites": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "EnabledRequest": {
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "ExecutionConfig": {
+        "properties": {
+          "permissionMode": {
+            "type": "string"
+          },
+          "toolsets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ExecutionSearchRecord": {
+        "properties": {
+          "conversationId": {
+            "type": "string"
+          },
+          "deleted": {
+            "type": "boolean"
+          },
+          "recordId": {
+            "type": "string"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "sourceMessageId": {
+            "nullable": true,
+            "type": "string"
+          },
+          "sourceRevision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "toolCallId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ExecutionSpec": {
+        "discriminator": {
+          "mapping": {
+            "AGENT": "#/components/schemas/AgentSpec",
+            "CONVERSATION": "#/components/schemas/ConversationSpec"
+          },
+          "propertyName": "kind"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/AgentSpec"
+          },
+          {
+            "$ref": "#/components/schemas/ConversationSpec"
+          }
+        ]
+      },
+      "Export": {
+        "properties": {
+          "artifactId": {
+            "type": "string"
+          },
+          "downloadPath": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Fact": {
+        "properties": {
+          "createdAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "messageId": {
+            "type": "string"
+          },
+          "qualifier": {
+            "type": "string"
+          },
+          "quote": {
+            "type": "string"
+          },
+          "registration": {
+            "enum": [
+              "explicit",
+              "summary_candidate"
+            ],
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "supersedes": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "createdAt",
+          "id",
+          "key",
+          "messageId",
+          "qualifier",
+          "quote",
+          "revision"
+        ],
+        "type": "object"
+      },
+      "FactPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Fact"
+            },
+            "type": "array"
+          },
+          "nextOffset": {
+            "format": "int32",
+            "nullable": true,
+            "type": "integer"
+          },
+          "total": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "type": "object"
+      },
+      "FileSnapshotEntry": {
+        "properties": {
+          "afterExisted": {
+            "type": "boolean"
+          },
+          "afterHash": {
+            "type": "string"
+          },
+          "afterSize": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "agentId": {
+            "type": "string"
+          },
+          "beforeHash": {
+            "type": "string"
+          },
+          "beforeMtime": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "beforeSize": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "changeType": {
+            "type": "string"
+          },
+          "diffAvailable": {
+            "type": "boolean"
+          },
+          "diffBinary": {
+            "type": "boolean"
+          },
+          "diffTruncated": {
+            "type": "boolean"
+          },
+          "diffWhitespaceOnly": {
+            "type": "boolean"
+          },
+          "existed": {
+            "type": "boolean"
+          },
+          "linesAdded": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "linesDeleted": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "parentThreadId": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "skipped": {
+            "type": "boolean"
+          },
+          "skippedReason": {
+            "type": "string"
+          },
+          "subagentThreadId": {
+            "type": "string"
+          },
+          "threadId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Fork": {
+        "properties": {
+          "commandId": {
+            "type": "string"
+          },
+          "leafId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "GoalBudget": {
+        "properties": {
+          "activeWallClockBudgetMs": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "costBudget": {
+            "format": "double",
+            "type": "number"
+          },
+          "elapsedDeadline": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "maxGoalTurns": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "maxModelCalls": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "maxToolCalls": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "tokenBudget": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "activeWallClockBudgetMs",
+          "costBudget",
+          "maxGoalTurns",
+          "maxModelCalls",
+          "maxToolCalls",
+          "tokenBudget"
+        ],
+        "type": "object"
+      },
+      "GoalBudgetRequest": {
+        "properties": {
+          "activeWallClockBudgetMs": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "costBudget": {
+            "format": "double",
+            "type": "number"
+          },
+          "elapsedDeadline": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "maxGoalTurns": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "maxModelCalls": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "maxToolCalls": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "tokenBudget": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "GoalCreateRequest": {
+        "properties": {
+          "budget": {
+            "$ref": "#/components/schemas/GoalBudgetRequest"
+          },
+          "clientRequestId": {
+            "type": "string"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/GoalCriterionRequest"
+            },
+            "type": "array"
+          },
+          "notificationMode": {
+            "enum": [
+              "OFF",
+              "ALL",
+              "FAILURES"
+            ],
+            "type": "string"
+          },
+          "objective": {
+            "type": "string"
+          },
+          "run": {
+            "$ref": "#/components/schemas/RunConfig"
+          },
+          "start": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "GoalCriterion": {
+        "properties": {
+          "assertion": {
+            "enum": [
+              "EXISTS",
+              "NOT_EXISTS",
+              "CONTAINS"
+            ],
+            "type": "string"
+          },
+          "criterionId": {
+            "type": "string"
+          },
+          "expected": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "type": {
+            "enum": [
+              "TEXT",
+              "VERIFY_CHECK",
+              "FILE_ASSERTION",
+              "TODO_COMPLETE",
+              "USER_REVIEW"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "criterionId",
+          "required",
+          "type"
+        ],
+        "type": "object"
+      },
+      "GoalCriterionRequest": {
+        "properties": {
+          "assertion": {
+            "type": "string"
+          },
+          "criterionId": {
+            "type": "string"
+          },
+          "expected": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "GoalExecutionView": {
+        "properties": {
+          "activeWallClockMs": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "blockerCount": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "completionRequest": {
+            "$ref": "#/components/schemas/CompletionRequest"
+          },
+          "consecutiveNoProgress": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "cost": {
+            "$ref": "#/components/schemas/CostView"
+          },
+          "criteriaResults": {
+            "items": {
+              "$ref": "#/components/schemas/CriterionResult"
+            },
+            "type": "array"
+          },
+          "modelCalls": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "retryAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "retryAttempts": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/StepAttempt"
+            },
+            "type": "array"
+          },
+          "stopReason": {
+            "type": "string"
+          },
+          "toolCalls": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "turnsUsed": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "GoalHistory": {
+        "properties": {
+          "goalId": {
+            "type": "string"
+          },
+          "runs": {
+            "items": {
+              "$ref": "#/components/schemas/RunView"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "GoalPage": {
+        "properties": {
+          "goals": {
+            "items": {
+              "$ref": "#/components/schemas/GoalView"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "GoalPatchRequest": {
+        "properties": {
+          "budget": {
+            "$ref": "#/components/schemas/GoalBudgetRequest"
+          },
+          "clientRequestId": {
+            "type": "string"
+          },
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/GoalCriterionRequest"
+            },
+            "type": "array"
+          },
+          "objective": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "run": {
+            "$ref": "#/components/schemas/RunConfig"
+          }
+        },
+        "type": "object"
+      },
+      "GoalStartRunRequest": {
+        "properties": {
+          "clientRequestId": {
+            "type": "string"
+          },
+          "notificationMode": {
+            "enum": [
+              "OFF",
+              "ALL",
+              "FAILURES"
+            ],
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "run": {
+            "$ref": "#/components/schemas/RunConfig"
+          }
+        },
+        "type": "object"
+      },
+      "GoalView": {
+        "properties": {
+          "activeRunId": {
+            "type": "string"
+          },
+          "activeRunRevision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/GoalBudget"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/GoalCriterion"
+            },
+            "type": "array"
+          },
+          "goalId": {
+            "type": "string"
+          },
+          "instructionRevisions": {
+            "items": {
+              "$ref": "#/components/schemas/InstructionRevision"
+            },
+            "type": "array"
+          },
+          "latestRunId": {
+            "type": "string"
+          },
+          "latestRunRevision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "latestRunStatus": {
+            "enum": [
+              "CREATED",
+              "QUEUED",
+              "RUNNING",
+              "PAUSE_REQUESTED",
+              "PAUSED",
+              "WAITING_RETRY",
+              "READY_FOR_REVIEW",
+              "COMPLETED",
+              "INCOMPLETE",
+              "BLOCKED",
+              "BUDGET_LIMITED",
+              "FAILED",
+              "CANCELLED",
+              "INTERRUPTED",
+              "EXPIRED"
+            ],
+            "type": "string"
+          },
+          "objective": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "runDefaults": {
+            "$ref": "#/components/schemas/RunDefaults"
+          },
+          "runIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "schemaVersion": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "CREATED",
+              "QUEUED",
+              "RUNNING",
+              "PAUSE_REQUESTED",
+              "PAUSED",
+              "WAITING_RETRY",
+              "READY_FOR_REVIEW",
+              "COMPLETED",
+              "INCOMPLETE",
+              "BLOCKED",
+              "BUDGET_LIMITED",
+              "FAILED",
+              "CANCELLED",
+              "INTERRUPTED",
+              "EXPIRED"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "budget",
+          "conversationId",
+          "createdAt",
+          "criteria",
+          "goalId",
+          "instructionRevisions",
+          "objective",
+          "revision",
+          "runDefaults",
+          "runIds",
+          "schemaVersion",
+          "status",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "Hit": {
+        "properties": {
+          "conversationId": {
+            "type": "string"
+          },
+          "executionRecordId": {
+            "type": "string"
+          },
+          "messageId": {
+            "type": "string"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "snippet": {
+            "type": "string"
+          },
+          "sourceKind": {
+            "type": "string"
+          },
+          "sourceRevision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "toolCallId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ImConnection": {
+        "properties": {
+          "allowMutations": {
+            "type": "boolean"
+          },
+          "allowYolo": {
+            "type": "boolean"
+          },
+          "cardTemplateId": {
+            "type": "string"
+          },
+          "clientId": {
+            "type": "string"
+          },
+          "clientSecret": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "peers": {
+            "items": {
+              "$ref": "#/components/schemas/ImPeer"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ImPairRequest": {
+        "properties": {
+          "revision": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ImPeer": {
+        "properties": {
+          "chatId": {
+            "type": "string"
+          },
+          "chatType": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ImSaveRequest": {
+        "properties": {
+          "connection": {
+            "$ref": "#/components/schemas/ImConnection"
+          },
+          "credentialId": {
+            "type": "string"
+          },
+          "credentialRevision": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ImSecretResponse": {
+        "properties": {
+          "clientSecret": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ImageCapabilities": {
+        "properties": {
+          "backgrounds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "edit": {
+            "type": "boolean"
+          },
+          "formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "generate": {
+            "type": "boolean"
+          },
+          "mask": {
+            "type": "boolean"
+          },
+          "maxCount": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "maxSourceBytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "maxSources": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "previews": {
+            "type": "boolean"
+          },
+          "qualities": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "query": {
+            "type": "boolean"
+          },
+          "sizes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "upstreamCancel": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "ImageOperationRecord": {
+        "properties": {
+          "acceptance": {
+            "enum": [
+              "NOT_SENT",
+              "SENT_UNKNOWN",
+              "ACCEPTED",
+              "REJECTED",
+              "OUTPUT_RECEIVED",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "artifactIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "configurationRef": {
+            "type": "string"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "operationId": {
+            "type": "string"
+          },
+          "parentStepId": {
+            "type": "string"
+          },
+          "parentToolCallId": {
+            "type": "string"
+          },
+          "providerHandle": {
+            "type": "string"
+          },
+          "requestHash": {
+            "type": "string"
+          },
+          "requestSnapshot": {
+            "$ref": "#/components/schemas/ImageSpec"
+          },
+          "responseComplete": {
+            "type": "boolean"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "schemaVersion": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "scopeId": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "QUEUED",
+              "RUNNING",
+              "SAVING",
+              "SUCCEEDED",
+              "PARTIAL_SUCCESS",
+              "FAILED",
+              "CANCEL_REQUESTED",
+              "CANCELLED",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "usage": {
+            "additionalProperties": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "type": "object"
+          }
+        },
+        "required": [
+          "acceptance",
+          "artifactIds",
+          "configurationRef",
+          "conversationId",
+          "createdAt",
+          "operationId",
+          "requestHash",
+          "requestSnapshot",
+          "responseComplete",
+          "revision",
+          "runId",
+          "schemaVersion",
+          "scopeId",
+          "state",
+          "updatedAt",
+          "usage"
+        ],
+        "type": "object"
+      },
+      "ImageSpec": {
+        "properties": {
+          "maskArtifactId": {
+            "type": "string"
+          },
+          "parameters": {
+            "$ref": "#/components/schemas/Parameters"
+          },
+          "serviceId": {
+            "type": "string"
+          },
+          "sourceArtifactIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ImageUpdate": {
+        "properties": {
+          "operation": {
+            "$ref": "#/components/schemas/ImageOperationRecord"
+          },
+          "operationId": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "InstructionRevision": {
+        "properties": {
+          "appliedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "inputId": {
+            "type": "string"
+          },
+          "sequence": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "InteractionUpdate": {
+        "properties": {
+          "kind": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Limits": {
+        "properties": {
+          "maxWorkIterations": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Materialization": {
+        "properties": {
+          "historyRevision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "parentMessageId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "MessageCommit": {
+        "properties": {
+          "receipt": {
+            "$ref": "#/components/schemas/CommitReceipt"
+          }
+        },
+        "type": "object"
+      },
+      "MessagePage": {
+        "properties": {
+          "activeLeafId": {
+            "nullable": true,
+            "type": "string"
+          },
+          "historyRevision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MessageRecord"
+            },
+            "type": "array"
+          },
+          "nextCursor": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "historyRevision",
+          "items"
+        ],
+        "type": "object"
+      },
+      "MessageRecord": {
+        "properties": {
+          "contentParts": {
+            "items": {
+              "$ref": "#/components/schemas/ContentPart"
+            },
+            "type": "array"
+          },
+          "createdAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "messageId": {
+            "type": "string"
+          },
+          "parentMessageId": {
+            "nullable": true,
+            "type": "string"
+          },
+          "revisesMessageId": {
+            "nullable": true,
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "role": {
+            "enum": [
+              "USER",
+              "ASSISTANT"
+            ],
+            "type": "string"
+          },
+          "runId": {
+            "nullable": true,
+            "type": "string"
+          },
+          "schemaVersion": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "PENDING",
+              "STREAMING",
+              "COMPLETED",
+              "PROGRESS",
+              "INCOMPLETE",
+              "INTERRUPTED",
+              "FAILED",
+              "CANCELLED"
+            ],
+            "type": "string"
+          },
+          "turnId": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "contentParts",
+          "createdAt",
+          "messageId",
+          "revision",
+          "role",
+          "runId",
+          "schemaVersion",
+          "status",
+          "turnId",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "ModelCallRecord": {
+        "properties": {
+          "attempts": {
+            "items": {
+              "$ref": "#/components/schemas/Attempt"
+            },
+            "type": "array"
+          },
+          "callId": {
+            "type": "string"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "finishedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "requestedModel": {
+            "type": "string"
+          },
+          "requestedProvider": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "schemaVersion": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "state": {
+            "enum": [
+              "RUNNING",
+              "SUCCEEDED",
+              "FAILED",
+              "CANCELLED",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "stepId": {
+            "type": "string"
+          },
+          "usageComplete": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "ModelCallUpdate": {
+        "properties": {
+          "call": {
+            "$ref": "#/components/schemas/ModelCallRecord"
+          },
+          "callId": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "NotificationRecipient": {
+        "properties": {
+          "account": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "chatId": {
+            "type": "string"
+          },
+          "chatType": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "NotificationRecipientOption": {
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "online": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "recipient": {
+            "$ref": "#/components/schemas/NotificationRecipient"
+          }
+        },
+        "type": "object"
+      },
+      "NotificationSelection": {
+        "properties": {
+          "recipientId": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "NotificationSettingsView": {
+        "properties": {
+          "defaultRecipient": {
+            "$ref": "#/components/schemas/NotificationRecipient"
+          },
+          "recipients": {
+            "items": {
+              "$ref": "#/components/schemas/NotificationRecipientOption"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "valid": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "Parameters": {
+        "properties": {
+          "background": {
+            "type": "string"
+          },
+          "count": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "format": {
+            "type": "string"
+          },
+          "quality": {
+            "type": "string"
+          },
+          "size": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PendingInteraction": {
+        "properties": {
+          "callId": {
+            "type": "string"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object"
+          }
+        },
+        "required": [
+          "callId",
+          "conversationId",
+          "createdAt",
+          "kind",
+          "payload"
+        ],
+        "type": "object"
+      },
+      "PendingSubmission": {
+        "properties": {
+          "clientRequestId": {
+            "type": "string"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "materialization": {
+            "$ref": "#/components/schemas/Materialization"
+          },
+          "ordinal": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "predecessorSubmissionId": {
+            "type": "string"
+          },
+          "predecessorTurnId": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "request": {
+            "$ref": "#/components/schemas/Request"
+          },
+          "requestHash": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "schemaVersion": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "scopeId": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "QUEUED",
+              "HELD",
+              "STARTING",
+              "STARTED",
+              "FAILED",
+              "CANCELLED"
+            ],
+            "type": "string"
+          },
+          "submissionId": {
+            "type": "string"
+          },
+          "turnId": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "clientRequestId",
+          "conversationId",
+          "createdAt",
+          "ordinal",
+          "request",
+          "requestHash",
+          "revision",
+          "schemaVersion",
+          "scopeId",
+          "state",
+          "submissionId",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "PendingSubmissionCreateRequest": {
+        "properties": {
+          "attachmentIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "clientRequestId": {
+            "type": "string"
+          },
+          "execution": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AgentSpec"
+              },
+              {
+                "$ref": "#/components/schemas/ConversationSpec"
+              }
+            ]
+          },
+          "input": {
+            "type": "string"
+          },
+          "notificationMode": {
+            "enum": [
+              "OFF",
+              "ALL",
+              "FAILURES"
+            ],
+            "type": "string"
+          },
+          "predecessorTurnId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "clientRequestId",
+          "execution",
+          "input",
+          "predecessorTurnId"
+        ],
+        "type": "object"
+      },
+      "PendingSubmissionPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PendingSubmission"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "PermissionContext": {
+        "properties": {
+          "allowMutations": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "Presentation": {
+        "properties": {
+          "cursor": {
+            "$ref": "#/components/schemas/PresentationCursor"
+          },
+          "history": {
+            "$ref": "#/components/schemas/RunHistory"
+          },
+          "inputs": {
+            "items": {
+              "$ref": "#/components/schemas/RunInputView"
+            },
+            "type": "array"
+          },
+          "interactionRevision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "interactions": {
+            "items": {
+              "$ref": "#/components/schemas/PendingInteraction"
+            },
+            "type": "array"
+          },
+          "live": {
+            "$ref": "#/components/schemas/Snapshot"
+          },
+          "run": {
+            "$ref": "#/components/schemas/RunView"
+          },
+          "schemaVersion": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cursor",
+          "history",
+          "inputs",
+          "interactionRevision",
+          "interactions",
+          "live",
+          "run",
+          "schemaVersion"
+        ],
+        "type": "object"
+      },
+      "PresentationCursor": {
+        "properties": {
+          "projectionSeq": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "replayAvailable": {
+            "type": "boolean"
+          },
+          "streamEpoch": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "projectionSeq",
+          "replayAvailable"
+        ],
+        "type": "object"
+      },
+      "PreviewRequest": {
+        "description": "Choose exactly one source: project path, owned artifact, or inline HTML.",
+        "properties": {
+          "artifactId": {
+            "type": "string"
+          },
+          "html": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PreviewSession": {
+        "properties": {
+          "expiresAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "mime": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "expiresAt",
+          "id",
+          "mime",
+          "name",
+          "url"
+        ],
+        "type": "object"
+      },
+      "ProcessMessage": {
+        "properties": {
+          "afterMessageId": {
+            "type": "string"
+          },
+          "seq": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "text": {
+            "type": "string"
+          },
+          "thinking": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProjectArtifactExportRequest": {
+        "properties": {
+          "clientRequestId": {
+            "type": "string"
+          },
+          "expectedChecksum": {
+            "type": "string"
+          },
+          "relativePath": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProjectArtifactExportResult": {
+        "properties": {
+          "artifactId": {
+            "type": "string"
+          },
+          "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "checksum": {
+            "type": "string"
+          },
+          "exportId": {
+            "type": "string"
+          },
+          "exportedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "relativePath": {
+            "type": "string"
+          },
+          "scopeId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProtocolInfo": {
+        "properties": {
+          "capabilities": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "runtimeProfile": {
+            "enum": [
+              "PERSONAL",
+              "PROJECT"
+            ],
+            "type": "string"
+          },
+          "runtimeSha256": {
+            "type": "string"
+          },
+          "runtimeVersion": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "capabilities",
+          "name",
+          "runtimeProfile",
+          "runtimeVersion",
+          "version"
+        ],
+        "type": "object"
+      },
+      "ProviderAttempt": {
+        "properties": {
+          "attempts": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "circuitState": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "subagentThreadId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ProviderTokenUsage": {
+        "properties": {
+          "cacheWriteInput": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "cachedInput": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "completion": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "prompt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "reasoning": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "RegisterFact": {
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "leafId": {
+            "nullable": true,
+            "type": "string"
+          },
+          "qualifier": {
+            "nullable": true,
+            "type": "string"
+          },
+          "quote": {
+            "type": "string"
+          },
+          "sourceMessageId": {
+            "type": "string"
+          },
+          "sourceRevision": {
+            "format": "int64",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "supersedes": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "quote",
+          "sourceMessageId",
+          "sourceRevision"
+        ],
+        "type": "object"
+      },
+      "Request": {
+        "properties": {
+          "attachmentIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "configurationRef": {
+            "type": "string"
+          },
+          "execution": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AgentSpec"
+              },
+              {
+                "$ref": "#/components/schemas/ConversationSpec"
+              }
+            ]
+          },
+          "input": {
+            "type": "string"
+          },
+          "notificationMode": {
+            "enum": [
+              "OFF",
+              "ALL",
+              "FAILURES"
+            ],
+            "type": "string"
+          },
+          "parentMessageId": {
+            "type": "string"
+          },
+          "predecessorTurnId": {
+            "type": "string"
+          },
+          "retryUserMessageId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ResourceRevision": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "RestoreFilePlan": {
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "beforeHash": {
+            "type": "string"
+          },
+          "changeType": {
+            "type": "string"
+          },
+          "conflict": {
+            "type": "boolean"
+          },
+          "diffAvailable": {
+            "type": "boolean"
+          },
+          "diffBinary": {
+            "type": "boolean"
+          },
+          "diffTruncated": {
+            "type": "boolean"
+          },
+          "diffWhitespaceOnly": {
+            "type": "boolean"
+          },
+          "linesAdded": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "linesDeleted": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "path": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Retry": {
+        "properties": {
+          "clientRequestId": {
+            "type": "string"
+          },
+          "execution": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AgentSpec"
+              },
+              {
+                "$ref": "#/components/schemas/ConversationSpec"
+              }
+            ]
+          },
+          "expectedHistoryRevision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "rerunAgent": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "Review": {
+        "properties": {
+          "clientRequestId": {
+            "type": "string"
+          },
+          "decision": {
+            "type": "string"
+          },
+          "feedback": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "Revision": {
+        "properties": {
+          "commandId": {
+            "type": "string"
+          },
+          "contentParts": {
+            "items": {
+              "$ref": "#/components/schemas/ContentPart"
+            },
+            "type": "array"
+          },
+          "expectedHistoryRevision": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "RunConfig": {
+        "properties": {
+          "interactionTarget": {
+            "type": "string"
+          },
+          "maxWorkIterations": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "model": {
+            "type": "string"
+          },
+          "permissionMode": {
+            "type": "string"
+          },
+          "planReview": {
+            "enum": [
+              "REQUIRED",
+              "AUTOMATIC"
+            ],
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "readOnly": {
+            "type": "boolean"
+          },
+          "reasoningEffort": {
+            "type": "string"
+          },
+          "toolsets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "RunCreateRequest": {
+        "properties": {
+          "attachmentIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "clientRequestId": {
+            "type": "string"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "execution": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AgentSpec"
+              },
+              {
+                "$ref": "#/components/schemas/ConversationSpec"
+              }
+            ]
+          },
+          "expectedHistoryRevision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "input": {
+            "type": "string"
+          },
+          "notificationMode": {
+            "enum": [
+              "OFF",
+              "ALL",
+              "FAILURES"
+            ],
+            "type": "string"
+          },
+          "parentMessageId": {
+            "type": "string"
+          },
+          "stream": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "clientRequestId",
+          "execution"
+        ],
+        "type": "object"
+      },
+      "RunDefaults": {
+        "properties": {
+          "model": {
+            "type": "string"
+          },
+          "options": {
+            "$ref": "#/components/schemas/AgentExecutionOptions"
+          },
+          "permissionMode": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "reasoningEffort": {
+            "type": "string"
+          },
+          "toolsets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "RunHistory": {
+        "properties": {
+          "answer": {
+            "$ref": "#/components/schemas/MessageRecord"
+          },
+          "conversation": {
+            "$ref": "#/components/schemas/ConversationMeta"
+          },
+          "turn": {
+            "$ref": "#/components/schemas/TurnRecord"
+          }
+        },
+        "type": "object"
+      },
+      "RunInputCreateRequest": {
+        "properties": {
+          "attachmentIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "clientRequestId": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "RunInputPage": {
+        "properties": {
+          "inputs": {
+            "items": {
+              "$ref": "#/components/schemas/RunInputView"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "RunInputResponse": {
+        "properties": {
+          "input": {
+            "$ref": "#/components/schemas/RunInputView"
+          }
+        },
+        "type": "object"
+      },
+      "RunInputView": {
+        "properties": {
+          "appliedAfterSeq": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "appliedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "appliedStepId": {
+            "type": "string"
+          },
+          "applyOperationId": {
+            "type": "string"
+          },
+          "applyingAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "attachmentIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "clientRequestId": {
+            "type": "string"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "inputId": {
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "STEER"
+            ],
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "schemaVersion": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "sequence": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "QUEUED",
+              "APPLYING",
+              "APPLIED",
+              "CANCELLED",
+              "HELD",
+              "SUPERSEDED",
+              "REJECTED"
+            ],
+            "type": "string"
+          },
+          "terminalReason": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "attachmentIds",
+          "channel",
+          "clientRequestId",
+          "conversationId",
+          "createdAt",
+          "inputId",
+          "mode",
+          "revision",
+          "runId",
+          "schemaVersion",
+          "sequence",
+          "status",
+          "text"
+        ],
+        "type": "object"
+      },
+      "RunNotification": {
+        "properties": {
+          "mode": {
+            "enum": [
+              "OFF",
+              "ALL",
+              "FAILURES"
+            ],
+            "type": "string"
+          },
+          "recipient": {
+            "$ref": "#/components/schemas/NotificationRecipient"
+          }
+        },
+        "type": "object"
+      },
+      "RunOrigin": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "CLIENT",
+              "GATEWAY",
+              "AUTOMATION"
+            ],
+            "type": "string"
+          },
+          "reference": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "RunPage": {
+        "properties": {
+          "runs": {
+            "items": {
+              "$ref": "#/components/schemas/RunView"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "RunSubagentResult": {
+        "properties": {
+          "output": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "output"
+        ],
+        "type": "object"
+      },
+      "RunToolDetail": {
+        "properties": {
+          "afterMessageId": {
+            "type": "string"
+          },
+          "arguments": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "durationMs": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "name": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "resultPending": {
+            "type": "boolean"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "seq": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "subagentConversationId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "resultPending",
+          "runId",
+          "seq"
+        ],
+        "type": "object"
+      },
+      "RunView": {
+        "properties": {
+          "activities": {
+            "items": {
+              "$ref": "#/components/schemas/SemanticActivity"
+            },
+            "type": "array"
+          },
+          "actualModel": {
+            "type": "string"
+          },
+          "actualProvider": {
+            "type": "string"
+          },
+          "allowedActions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "cancelRequested": {
+            "type": "boolean"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "controlState": {
+            "type": "string"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "currentStepId": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "executing": {
+            "type": "boolean"
+          },
+          "executionConfig": {
+            "$ref": "#/components/schemas/ExecutionConfig"
+          },
+          "executionSpec": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AgentSpec"
+              },
+              {
+                "$ref": "#/components/schemas/ConversationSpec"
+              }
+            ]
+          },
+          "finishedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "firstAvailableSeq": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "goalExecution": {
+            "$ref": "#/components/schemas/GoalExecutionView"
+          },
+          "goalId": {
+            "type": "string"
+          },
+          "lastSeq": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "notification": {
+            "$ref": "#/components/schemas/RunNotification"
+          },
+          "options": {
+            "$ref": "#/components/schemas/AgentExecutionOptions"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/RunOrigin"
+          },
+          "ownsConversation": {
+            "type": "boolean"
+          },
+          "pendingInputCount": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "providerAttempts": {
+            "items": {
+              "$ref": "#/components/schemas/ProviderAttempt"
+            },
+            "type": "array"
+          },
+          "requestedModel": {
+            "type": "string"
+          },
+          "requestedProvider": {
+            "type": "string"
+          },
+          "requestedReasoningEffort": {
+            "type": "string"
+          },
+          "result": {
+            "$ref": "#/components/schemas/StepResult"
+          },
+          "resultReceipt": {
+            "$ref": "#/components/schemas/CommitReceipt"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "schemaVersion": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "scopeId": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "CREATED",
+              "QUEUED",
+              "RUNNING",
+              "PAUSE_REQUESTED",
+              "PAUSED",
+              "WAITING_RETRY",
+              "READY_FOR_REVIEW",
+              "COMPLETED",
+              "INCOMPLETE",
+              "BLOCKED",
+              "BUDGET_LIMITED",
+              "FAILED",
+              "CANCELLED",
+              "INTERRUPTED",
+              "EXPIRED"
+            ],
+            "type": "string"
+          },
+          "streamEpoch": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "subagents": {
+            "items": {
+              "$ref": "#/components/schemas/SubagentState"
+            },
+            "type": "array"
+          },
+          "terminal": {
+            "type": "boolean"
+          },
+          "turnId": {
+            "type": "string"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/Usage"
+          }
+        },
+        "required": [
+          "activities",
+          "allowedActions",
+          "cancelRequested",
+          "controlState",
+          "conversationId",
+          "createdAt",
+          "executing",
+          "executionSpec",
+          "lastSeq",
+          "origin",
+          "ownsConversation",
+          "pendingInputCount",
+          "providerAttempts",
+          "revision",
+          "runId",
+          "schemaVersion",
+          "status",
+          "subagents",
+          "terminal",
+          "usage"
+        ],
+        "type": "object"
+      },
+      "SchedulePreview": {
+        "properties": {
+          "nextRuns": {
+            "items": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "timeZone": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ScheduleRequest": {
+        "properties": {
+          "cron": {
+            "type": "string"
+          },
+          "timeZone": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ScopeView": {
+        "properties": {
+          "instanceId": {
+            "type": "string"
+          },
+          "projectRoot": {
+            "type": "string"
+          },
+          "runtimeDomainId": {
+            "type": "string"
+          },
+          "runtimeProfile": {
+            "enum": [
+              "PERSONAL",
+              "PROJECT"
+            ],
+            "type": "string"
+          },
+          "scopeId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "instanceId",
+          "runtimeDomainId",
+          "runtimeProfile",
+          "scopeId"
+        ],
+        "type": "object"
+      },
+      "SearchPage": {
+        "properties": {
+          "indexedThrough": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Hit"
+            },
+            "type": "array"
+          },
+          "nextCursor": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "READY",
+              "CATCHING_UP",
+              "REBUILDING",
+              "UNAVAILABLE"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SemanticActivity": {
+        "properties": {
+          "activityKind": {
+            "type": "string"
+          },
+          "activityOutcome": {
+            "type": "string"
+          },
+          "activitySummary": {
+            "type": "string"
+          },
+          "activityTargets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "activityTitle": {
+            "type": "string"
+          },
+          "afterTokens": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "beforeTokens": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "callId": {
+            "type": "string"
+          },
+          "childEventType": {
+            "type": "string"
+          },
+          "delegateCallId": {
+            "type": "string"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "parentThreadId": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "reductionPercent": {
+            "format": "double",
+            "type": "number"
+          },
+          "seq": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "sizeEffective": {
+            "type": "boolean"
+          },
+          "subagentThreadId": {
+            "type": "string"
+          },
+          "summarySource": {
+            "type": "string"
+          },
+          "toolName": {
+            "type": "string"
+          },
+          "trigger": {
+            "type": "string"
+          },
+          "ts": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "activityKind",
+          "activityOutcome",
+          "activityTitle",
+          "eventType",
+          "seq"
+        ],
+        "type": "object"
+      },
+      "ServiceView": {
+        "properties": {
+          "canSubmit": {
+            "type": "boolean"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/ImageCapabilities"
+          },
+          "code": {
+            "type": "string"
+          },
+          "defaults": {
+            "$ref": "#/components/schemas/Parameters"
+          },
+          "label": {
+            "type": "string"
+          },
+          "mainModel": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "retryAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "serviceId": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "UNCONFIGURED",
+              "UNSUPPORTED",
+              "CONFIGURED_UNVERIFIED",
+              "AVAILABLE",
+              "TEMPORARILY_UNAVAILABLE"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Snapshot": {
+        "properties": {
+          "imageOperations": {
+            "items": {
+              "$ref": "#/components/schemas/ResourceRevision"
+            },
+            "type": "array"
+          },
+          "messageStartSeq": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/ProcessMessage"
+            },
+            "type": "array"
+          },
+          "modelCalls": {
+            "items": {
+              "$ref": "#/components/schemas/ResourceRevision"
+            },
+            "type": "array"
+          },
+          "text": {
+            "type": "string"
+          },
+          "thinking": {
+            "type": "string"
+          },
+          "tools": {
+            "items": {
+              "$ref": "#/components/schemas/ToolActivity"
+            },
+            "type": "array"
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "imageOperations",
+          "messageStartSeq",
+          "modelCalls",
+          "text",
+          "thinking",
+          "tools",
+          "truncated"
+        ],
+        "type": "object"
+      },
+      "StepAttempt": {
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "finishedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "index": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "GOAL_STEP"
+            ],
+            "type": "string"
+          },
+          "progressFingerprint": {
+            "type": "string"
+          },
+          "startedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "status": {
+            "type": "string"
+          },
+          "stepId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "StepLimits": {
+        "properties": {
+          "finalizationGraceIterations": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "maxWorkIterations": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "StepResult": {
+        "properties": {
+          "detail": {
+            "type": "string"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "output": {
+            "type": "string"
+          },
+          "persisted": {
+            "type": "boolean"
+          },
+          "reason": {
+            "enum": [
+              "RETURNED",
+              "STEP_LIMIT",
+              "RUN_BUDGET",
+              "NEEDS_INPUT",
+              "PAUSED",
+              "SUPERSEDED",
+              "CANCELLED",
+              "FAILED"
+            ],
+            "type": "string"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "stepId": {
+            "type": "string"
+          },
+          "totalTokens": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "StreamEvent": {
+        "properties": {
+          "conversationId": {
+            "type": "string"
+          },
+          "data": {
+            "additionalProperties": {
+              "type": "object"
+            },
+            "type": "object"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "seq": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "streamEpoch": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "ts": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SubagentState": {
+        "properties": {
+          "activitySummary": {
+            "type": "string"
+          },
+          "activityTitle": {
+            "type": "string"
+          },
+          "completionCriteria": {
+            "type": "string"
+          },
+          "delegateCallId": {
+            "type": "string"
+          },
+          "depth": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "details": {
+            "items": {
+              "$ref": "#/components/schemas/SemanticActivity"
+            },
+            "type": "array"
+          },
+          "detailsTruncated": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "boolean"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "finishedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "finishedSeq": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "goal": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "maxIterations": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "model": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "output": {
+            "type": "string"
+          },
+          "parentThreadId": {
+            "type": "string"
+          },
+          "startedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "startedSeq": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "subagentThreadId": {
+            "type": "string"
+          },
+          "terminalStatus": {
+            "type": "string"
+          },
+          "toolsets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "outcome"
+        ],
+        "type": "object"
+      },
+      "SubmissionUpdate": {
+        "properties": {
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "submissionId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SummaryPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ConversationMeta"
+            },
+            "type": "array"
+          },
+          "nextCursor": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "TextDelta": {
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "TextTarget": {
+        "properties": {
+          "model": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "reasoningEffort": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Title": {
+        "properties": {
+          "commandId": {
+            "type": "string"
+          },
+          "expectedMetadataRevision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ToolActivity": {
+        "properties": {
+          "afterMessageId": {
+            "type": "string"
+          },
+          "arguments": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "durationMs": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "resultPending": {
+            "type": "boolean"
+          },
+          "seq": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "subagentConversationId": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "TurnRecord": {
+        "properties": {
+          "acceptedOperationId": {
+            "type": "string"
+          },
+          "assistantAttemptIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "executionSnapshot": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AgentSpec"
+              },
+              {
+                "$ref": "#/components/schemas/ConversationSpec"
+              }
+            ]
+          },
+          "predecessorTurnId": {
+            "type": "string"
+          },
+          "requestHash": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "turnId": {
+            "type": "string"
+          },
+          "userMessageId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "acceptedOperationId",
+          "assistantAttemptIds",
+          "conversationId",
+          "executionSnapshot",
+          "requestId",
+          "runId",
+          "turnId",
+          "userMessageId"
+        ],
+        "type": "object"
+      },
+      "Usage": {
+        "properties": {
+          "cacheWriteInput": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "cachedInput": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "completion": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "estimated": {
+            "type": "boolean"
+          },
+          "events": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "expectedEvents": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "partial": {
+            "type": "boolean"
+          },
+          "prompt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "reasoning": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "taskEvents": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "total": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "UsageDocument": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/UsageEntry"
+            },
+            "type": "array"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "schemaVersion": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "entries",
+          "runId",
+          "schemaVersion"
+        ],
+        "type": "object"
+      },
+      "UsageEntry": {
+        "properties": {
+          "acceptance": {
+            "enum": [
+              "NOT_SENT",
+              "SENT_UNKNOWN",
+              "ACCEPTED",
+              "REJECTED",
+              "OUTPUT_RECEIVED",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "attemptId": {
+            "type": "string"
+          },
+          "callId": {
+            "type": "string"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "costComplete": {
+            "type": "boolean"
+          },
+          "finishedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "knownAmount": {
+            "type": "number"
+          },
+          "model": {
+            "type": "string"
+          },
+          "operationId": {
+            "type": "string"
+          },
+          "price": {
+            "$ref": "#/components/schemas/UsagePrice"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "quantities": {
+            "additionalProperties": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "type": "object"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "startedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "state": {
+            "enum": [
+              "RUNNING",
+              "SUCCEEDED",
+              "FAILED",
+              "CANCELLED",
+              "UNKNOWN"
+            ],
+            "type": "string"
+          },
+          "stepId": {
+            "type": "string"
+          },
+          "usageComplete": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "acceptance",
+          "attemptId",
+          "callId",
+          "costComplete",
+          "kind",
+          "knownAmount",
+          "model",
+          "provider",
+          "purpose",
+          "quantities",
+          "revision",
+          "runId",
+          "startedAt",
+          "state",
+          "usageComplete"
+        ],
+        "type": "object"
+      },
+      "UsagePrice": {
+        "properties": {
+          "basis": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "rates": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "basis",
+          "rates"
+        ],
+        "type": "object"
+      },
+      "UsageReport": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/UsageEntry"
+            },
+            "type": "array"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/UsageSummary"
+          }
+        },
+        "required": [
+          "entries",
+          "summary"
+        ],
+        "type": "object"
+      },
+      "UsageSummary": {
+        "properties": {
+          "attempts": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "calculatedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "completionTokens": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "costComplete": {
+            "type": "boolean"
+          },
+          "images": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "knownAmounts": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object"
+          },
+          "promptTokens": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "unknownCostAttempts": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "unknownUsageAttempts": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "usageComplete": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "attempts",
+          "calculatedAt",
+          "completionTokens",
+          "costComplete",
+          "images",
+          "knownAmounts",
+          "promptTokens",
+          "runId",
+          "unknownCostAttempts",
+          "unknownUsageAttempts",
+          "usageComplete"
+        ],
+        "type": "object"
+      },
+      "WorkspaceSnapshot": {
+        "properties": {
+          "agentId": {
+            "type": "string"
+          },
+          "conversationHash": {
+            "type": "string"
+          },
+          "conversationRestorable": {
+            "type": "boolean"
+          },
+          "fileCoverage": {
+            "type": "string"
+          },
+          "fileEntries": {
+            "items": {
+              "$ref": "#/components/schemas/FileSnapshotEntry"
+            },
+            "type": "array"
+          },
+          "fileRestorable": {
+            "type": "boolean"
+          },
+          "iteration": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "msgCount": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "parentThreadId": {
+            "type": "string"
+          },
+          "rootThreadId": {
+            "type": "string"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "seq": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "subagentThreadId": {
+            "type": "string"
+          },
+          "takenAt": {
+            "type": "string"
+          },
+          "threadId": {
+            "type": "string"
+          },
+          "toolCallId": {
+            "type": "string"
+          },
+          "toolSummaries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "vcs": {
+            "type": "object"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "seq"
+        ],
+        "type": "object"
+      },
+      "WorkspaceSnapshotBranchRequest": {
+        "properties": {
+          "commandId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "commandId"
+        ],
+        "type": "object"
+      },
+      "WorkspaceSnapshotBranchResult": {
+        "properties": {
+          "conversationId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "conversationId"
+        ],
+        "type": "object"
+      },
+      "WorkspaceSnapshotRestorePlan": {
+        "properties": {
+          "canRestoreFiles": {
+            "type": "boolean"
+          },
+          "conflicts": {
+            "items": {
+              "$ref": "#/components/schemas/RestoreFilePlan"
+            },
+            "type": "array"
+          },
+          "conversationRestorable": {
+            "type": "boolean"
+          },
+          "fileCoverage": {
+            "type": "string"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/RestoreFilePlan"
+            },
+            "type": "array"
+          },
+          "historyRevision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "seq": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "mode",
+          "seq"
+        ],
+        "type": "object"
+      },
+      "WorkspaceSnapshotRestorePlanRequest": {
+        "properties": {
+          "mode": {
+            "type": "string"
+          },
+          "paths": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "WorkspaceSnapshotRestoreRequest": {
+        "properties": {
+          "commandId": {
+            "type": "string"
+          },
+          "expectedHistoryRevision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "force": {
+            "type": "boolean"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "paths": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "commandId"
+        ],
+        "type": "object"
+      },
+      "WorkspaceSnapshotRestoreResult": {
+        "properties": {
+          "conflicts": {
+            "items": {
+              "$ref": "#/components/schemas/RestoreFilePlan"
+            },
+            "type": "array"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "conversationRestored": {
+            "type": "boolean"
+          },
+          "failedFiles": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "fileCoverage": {
+            "type": "string"
+          },
+          "filesRestored": {
+            "type": "boolean"
+          },
+          "historyRevision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "leafId": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "restored": {
+            "type": "boolean"
+          },
+          "restoredFileCount": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "skippedFileCount": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
+  },
+  "openapi": "3.0.1",
+  "paths": {
+    "/api/cron": {
+      "get": {
+        "operationId": "cronList",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CronJobView"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "cron-controller"
+        ]
+      },
+      "post": {
+        "operationId": "cronAdd",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CronJob"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "cron-controller"
+        ]
+      }
+    },
+    "/api/cron/preview": {
+      "post": {
+        "operationId": "cronPreview",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchedulePreview"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "cron-controller"
+        ]
+      }
+    },
+    "/api/cron/results/{attemptId}": {
+      "get": {
+        "operationId": "result",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attemptId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomationExecutionResult"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "cron-controller"
+        ]
+      }
+    },
+    "/api/cron/targets": {
+      "get": {
+        "operationId": "targets",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AutomationTargetView"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "cron-controller"
+        ]
+      }
+    },
+    "/api/cron/targets/{targetId}/notifications": {
+      "get": {
+        "operationId": "notificationSettings",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "targetId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationSettingsView"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "cron-controller"
+        ]
+      }
+    },
+    "/api/cron/toolsets": {
+      "get": {
+        "operationId": "toolsets",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "additionalProperties": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "cron-controller"
+        ]
+      }
+    },
+    "/api/cron/{id}": {
+      "delete": {
+        "operationId": "cronDel",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "object"
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "cron-controller"
+        ]
+      }
+    },
+    "/api/cron/{id}/cancel": {
+      "post": {
+        "operationId": "cancelExecution",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "cron-controller"
+        ]
+      }
+    },
+    "/api/cron/{id}/enabled": {
+      "post": {
+        "operationId": "cronEnabled",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnabledRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "object"
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "cron-controller"
+        ]
+      }
+    },
+    "/api/cron/{id}/history": {
+      "get": {
+        "operationId": "history_1",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AutomationAttempt"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "cron-controller"
+        ]
+      }
+    },
+    "/api/cron/{id}/run": {
+      "post": {
+        "operationId": "cronRun",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "cron-controller"
+        ]
+      }
+    },
+    "/api/im": {
+      "get": {
+        "operationId": "view",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "object"
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "im-controller"
+        ]
+      }
+    },
+    "/api/im/credentials/{id}/secret": {
+      "get": {
+        "operationId": "revealSavedSecret",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImSecretResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "im-controller"
+        ]
+      }
+    },
+    "/api/im/dingtalk/template": {
+      "get": {
+        "operationId": "template",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "format": "byte",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "im-controller"
+        ]
+      }
+    },
+    "/api/im/notifications": {
+      "get": {
+        "operationId": "notifications_1",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationSettingsView"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "im-controller"
+        ]
+      },
+      "put": {
+        "operationId": "notifications",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationSelection"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationSettingsView"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "im-controller"
+        ]
+      }
+    },
+    "/api/im/pairing/{id}": {
+      "post": {
+        "operationId": "pair",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImPairRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "object"
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "im-controller"
+        ]
+      }
+    },
+    "/api/im/{channel}": {
+      "put": {
+        "operationId": "save",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "channel",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImSaveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "object"
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "im-controller"
+        ]
+      }
+    },
+    "/api/im/{channel}/reconnect": {
+      "post": {
+        "operationId": "reconnect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "channel",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "object"
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "im-controller"
+        ]
+      }
+    },
+    "/api/im/{channel}/secret": {
+      "get": {
+        "operationId": "revealSecret",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "channel",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "clientId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImSecretResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "im-controller"
+        ]
+      }
+    },
+    "/api/v1/agent/conversations/{id}/snapshots": {
+      "get": {
+        "operationId": "list_7",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceSnapshot"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "snapshot-controller"
+        ]
+      },
+      "post": {
+        "operationId": "take",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "label",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "object"
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "snapshot-controller"
+        ]
+      }
+    },
+    "/api/v1/agent/conversations/{id}/snapshots/{seq}/branch": {
+      "post": {
+        "operationId": "branch_1",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "seq",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceSnapshotBranchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceSnapshotBranchResult"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "snapshot-controller"
+        ]
+      }
+    },
+    "/api/v1/agent/conversations/{id}/snapshots/{seq}/restore": {
+      "post": {
+        "operationId": "restore",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "seq",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceSnapshotRestoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceSnapshotRestoreResult"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "snapshot-controller"
+        ]
+      }
+    },
+    "/api/v1/agent/conversations/{id}/snapshots/{seq}/restore-plan": {
+      "post": {
+        "operationId": "restorePlan",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "seq",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceSnapshotRestorePlanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceSnapshotRestorePlan"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "snapshot-controller"
+        ]
+      }
+    },
+    "/api/v1/artifacts/imports": {
+      "post": {
+        "operationId": "upload",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "clientRequestId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactRecord"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "artifacts-controller"
+        ]
+      }
+    },
+    "/api/v1/artifacts/{id}": {
+      "get": {
+        "operationId": "metadata",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactRecord"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "artifacts-controller"
+        ]
+      }
+    },
+    "/api/v1/artifacts/{id}/content": {
+      "get": {
+        "operationId": "content",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "download",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "artifacts-controller"
+        ]
+      }
+    },
+    "/api/v1/artifacts/{id}/exports": {
+      "post": {
+        "operationId": "export_1",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Export"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "artifacts-controller"
+        ]
+      }
+    },
+    "/api/v1/artifacts/{id}/project-exports": {
+      "post": {
+        "operationId": "export",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectArtifactExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectArtifactExportResult"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "project-artifact-exports-controller"
+        ]
+      }
+    },
+    "/api/v1/automation-executions": {
+      "post": {
+        "operationId": "create_3",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutomationExecutionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomationExecutionStart"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "automation-execution-controller"
+        ]
+      }
+    },
+    "/api/v1/automation-executions/{attemptId}": {
+      "get": {
+        "operationId": "get_7",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attemptId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomationExecutionResult"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "automation-execution-controller"
+        ]
+      }
+    },
+    "/api/v1/automation-executions/{attemptId}/cancel": {
+      "post": {
+        "operationId": "cancel_2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attemptId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "automation-execution-controller"
+        ]
+      }
+    },
+    "/api/v1/conversations": {
+      "get": {
+        "operationId": "list_5",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 40,
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SummaryPage"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "conversations-controller"
+        ]
+      }
+    },
+    "/api/v1/conversations/search": {
+      "get": {
+        "operationId": "search",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "conversationId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchPage"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "conversations-controller"
+        ]
+      }
+    },
+    "/api/v1/conversations/{conversationId}/submissions": {
+      "get": {
+        "operationId": "list_6",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingSubmissionPage"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "submissions-controller"
+        ]
+      },
+      "post": {
+        "operationId": "enqueue_1",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PendingSubmissionCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingSubmission"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "submissions-controller"
+        ]
+      }
+    },
+    "/api/v1/conversations/{conversationId}/submissions/{submissionId}/cancel": {
+      "post": {
+        "operationId": "cancel_1",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "submissionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingSubmission"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "submissions-controller"
+        ]
+      }
+    },
+    "/api/v1/conversations/{id}": {
+      "delete": {
+        "operationId": "delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Delete"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommitReceipt"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "conversations-controller"
+        ]
+      },
+      "get": {
+        "operationId": "get_6",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationMeta"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "conversations-controller"
+        ]
+      }
+    },
+    "/api/v1/conversations/{id}/branches/selection": {
+      "post": {
+        "operationId": "branch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Branch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommitReceipt"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "conversations-controller"
+        ]
+      }
+    },
+    "/api/v1/conversations/{id}/execution-records/{recordId}": {
+      "get": {
+        "operationId": "executionRecord",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "recordId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecutionSearchRecord"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "conversations-controller"
+        ]
+      }
+    },
+    "/api/v1/conversations/{id}/facts": {
+      "get": {
+        "operationId": "facts",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "leafId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 40,
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/FactPage"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "conversations-controller"
+        ]
+      },
+      "post": {
+        "operationId": "registerFact",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterFact"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Fact"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "conversations-controller"
+        ]
+      }
+    },
+    "/api/v1/conversations/{id}/forks": {
+      "post": {
+        "operationId": "fork",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Fork"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommitReceipt"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "conversations-controller"
+        ]
+      }
+    },
+    "/api/v1/conversations/{id}/messages": {
+      "get": {
+        "operationId": "messages",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "leafId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 40,
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessagePage"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "conversations-controller"
+        ]
+      }
+    },
+    "/api/v1/conversations/{id}/messages/{messageId}": {
+      "get": {
+        "operationId": "message",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "messageId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageRecord"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "conversations-controller"
+        ]
+      }
+    },
+    "/api/v1/conversations/{id}/messages/{messageId}/retry": {
+      "post": {
+        "operationId": "retry",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "messageId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Retry"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "conversations-controller"
+        ]
+      }
+    },
+    "/api/v1/conversations/{id}/messages/{messageId}/revisions": {
+      "post": {
+        "operationId": "revise",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "messageId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Revision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommitReceipt"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "conversations-controller"
+        ]
+      }
+    },
+    "/api/v1/conversations/{id}/title": {
+      "post": {
+        "operationId": "title",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Title"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommitReceipt"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "conversations-controller"
+        ]
+      }
+    },
+    "/api/v1/conversations/{id}/turns/{turnId}": {
+      "get": {
+        "operationId": "turn",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "turnId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnRecord"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "conversations-controller"
+        ]
+      }
+    },
+    "/api/v1/goals": {
+      "get": {
+        "operationId": "list_4",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "conversationId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalPage"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "goals-controller"
+        ]
+      },
+      "post": {
+        "operationId": "create_2",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoalCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalView"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "goals-controller"
+        ]
+      }
+    },
+    "/api/v1/goals/{goalId}": {
+      "get": {
+        "operationId": "get_5",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "goalId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalView"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "goals-controller"
+        ]
+      },
+      "patch": {
+        "operationId": "patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "goalId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoalPatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalView"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "goals-controller"
+        ]
+      }
+    },
+    "/api/v1/goals/{goalId}/history": {
+      "get": {
+        "operationId": "history",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "goalId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoalHistory"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "goals-controller"
+        ]
+      }
+    },
+    "/api/v1/goals/{goalId}/runs": {
+      "post": {
+        "operationId": "startRun",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "goalId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoalStartRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunView"
+                }
+              }
+            },
+            "description": "Accepted"
+          }
+        },
+        "tags": [
+          "goals-controller"
+        ]
+      }
+    },
+    "/api/v1/image-operations/{id}": {
+      "get": {
+        "operationId": "operation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImageOperationRecord"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "image-services-controller"
+        ]
+      }
+    },
+    "/api/v1/image-services": {
+      "get": {
+        "operationId": "catalog",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Catalog"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "image-services-controller"
+        ]
+      }
+    },
+    "/api/v1/previews": {
+      "post": {
+        "operationId": "create_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewSession"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "preview-controller"
+        ]
+      }
+    },
+    "/api/v1/previews/{id}": {
+      "delete": {
+        "operationId": "remove",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "preview-controller"
+        ]
+      }
+    },
+    "/api/v1/protocol": {
+      "get": {
+        "operationId": "protocol",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProtocolInfo"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "protocol-controller"
+        ]
+      }
+    },
+    "/api/v1/runs": {
+      "get": {
+        "operationId": "list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "conversationId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunPage"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "runs-controller"
+        ]
+      },
+      "post": {
+        "operationId": "create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunView"
+                }
+              }
+            },
+            "description": "Accepted"
+          }
+        },
+        "tags": [
+          "runs-controller"
+        ]
+      }
+    },
+    "/api/v1/runs/{runId}": {
+      "get": {
+        "operationId": "get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunView"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "runs-controller"
+        ]
+      }
+    },
+    "/api/v1/runs/{runId}/cancel": {
+      "post": {
+        "operationId": "cancel",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Control"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "runs-controller"
+        ]
+      }
+    },
+    "/api/v1/runs/{runId}/context-plans": {
+      "get": {
+        "operationId": "list_3",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ContextPlan"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "context-plans-controller"
+        ]
+      }
+    },
+    "/api/v1/runs/{runId}/context-plans/{planId}": {
+      "get": {
+        "operationId": "get_4",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "planId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextPlan"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "context-plans-controller"
+        ]
+      }
+    },
+    "/api/v1/runs/{runId}/events": {
+      "get": {
+        "operationId": "events",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "afterSeq",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "streamEpoch",
+            "required": false,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              },
+              "text/event-stream": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "runs-controller"
+        ]
+      }
+    },
+    "/api/v1/runs/{runId}/inputs": {
+      "get": {
+        "operationId": "list_2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunInputPage"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "run-inputs-controller"
+        ]
+      },
+      "post": {
+        "operationId": "enqueue",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunInputCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunInputResponse"
+                }
+              }
+            },
+            "description": "Accepted"
+          }
+        },
+        "tags": [
+          "run-inputs-controller"
+        ]
+      }
+    },
+    "/api/v1/runs/{runId}/inputs/{inputId}": {
+      "delete": {
+        "operationId": "withdraw",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "inputId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "clientRequestId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunInputResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "run-inputs-controller"
+        ]
+      }
+    },
+    "/api/v1/runs/{runId}/model-calls": {
+      "get": {
+        "operationId": "list_1",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ModelCallRecord"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "model-calls-controller"
+        ]
+      }
+    },
+    "/api/v1/runs/{runId}/model-calls/status": {
+      "get": {
+        "operationId": "status",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiagnosticStatus"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "model-calls-controller"
+        ]
+      }
+    },
+    "/api/v1/runs/{runId}/model-calls/{callId}": {
+      "get": {
+        "operationId": "get_3",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "callId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelCallRecord"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "model-calls-controller"
+        ]
+      }
+    },
+    "/api/v1/runs/{runId}/pause": {
+      "post": {
+        "operationId": "pause",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Control"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "agent-run-controls-controller"
+        ]
+      }
+    },
+    "/api/v1/runs/{runId}/presentation": {
+      "get": {
+        "operationId": "get_2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Presentation"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "run-presentation-controller"
+        ]
+      }
+    },
+    "/api/v1/runs/{runId}/resume": {
+      "post": {
+        "operationId": "resume",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Control"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "agent-run-controls-controller"
+        ]
+      }
+    },
+    "/api/v1/runs/{runId}/review": {
+      "post": {
+        "operationId": "review",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Review"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "agent-run-controls-controller"
+        ]
+      }
+    },
+    "/api/v1/runs/{runId}/subagents/{threadId}/result": {
+      "get": {
+        "operationId": "subagentResult",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "threadId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunSubagentResult"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "run-tools-controller"
+        ]
+      }
+    },
+    "/api/v1/runs/{runId}/tools/{seq}": {
+      "get": {
+        "operationId": "get_1",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "seq",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunToolDetail"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "run-tools-controller"
+        ]
+      }
+    },
+    "/api/v1/runs/{runId}/usage": {
+      "get": {
+        "operationId": "report",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageReport"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "usage-controller"
+        ]
+      }
+    },
+    "/api/v1/runs/{runId}/usage/entries": {
+      "get": {
+        "operationId": "entries",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageDocument"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "usage-controller"
+        ]
+      }
+    },
+    "/api/v1/scope": {
+      "get": {
+        "operationId": "scope",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeView"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "scope-controller"
+        ]
+      }
+    }
+  },
+  "x-harnex-event-payloads": {
+    "artifact_preview": "#/components/schemas/ArtifactUpdate",
+    "artifact_ready": "#/components/schemas/ArtifactUpdate",
+    "image_operation_updated": "#/components/schemas/ImageUpdate",
+    "interaction_updated": "#/components/schemas/InteractionUpdate",
+    "message_checkpoint": "#/components/schemas/MessageCommit",
+    "message_committed": "#/components/schemas/MessageCommit",
+    "model_call_updated": "#/components/schemas/ModelCallUpdate",
+    "submission_updated": "#/components/schemas/SubmissionUpdate",
+    "text_delta": "#/components/schemas/TextDelta",
+    "thinking_delta": "#/components/schemas/TextDelta"
+  }
+}

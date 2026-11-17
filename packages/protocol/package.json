@@ -1,0 +1,15 @@
+{
+  "name": "@harnex/protocol",
+  "version": "1.0.0",
+  "description": "TypeScript types for Harnex Local API v1 and the single-workspace Supervisor control plane. Types-only package — the runtime OpenAPI spec (/v3/api-docs) is the wire-format source of truth.",
+  "types": "index.d.ts",
+  "files": [
+    "index.d.ts",
+    "generated.d.ts",
+    "workbench.d.ts",
+    "openapi.json",
+    "fixtures.json",
+    "LICENSE"
+  ],
+  "license": "Apache-2.0"
+}

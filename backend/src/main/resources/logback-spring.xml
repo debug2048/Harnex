@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Harnex logback config (A5 in docs/01_四大框架对比分析.md §九).
+
+    Goals:
+      - Console output keeps the same %X{traceId} pattern that ops dashboards already grep on.
+      - Application log file rolls daily AND when a single day's file exceeds 5 MB; old
+        archives are gzipped and capped at LOG_RETENTION_DAYS days OR LOG_TOTAL_SIZE_CAP total
+        (whichever comes first), so an unattended deployment cannot fill the volume.
+      - Defaults reserve a small diagnostic window per data directory; user history is stored separately.
+
+    Override at runtime via env / -D:
+      HARNEX_LOG_DIR             default ${harnex.data-dir}/diagnostics/logs
+      HARNEX_LOG_LEVEL_ROOT      default INFO
+      HARNEX_LOG_LEVEL_APP       default INFO
+      HARNEX_LOG_RETENTION_DAYS  default 7
+      HARNEX_LOG_TOTAL_SIZE_CAP  default 20MB (archives, plus the current file)
+-->
+<!-- This file is packaged inside the Runtime JAR and cannot change in place. Enabling Logback's
+     scanner creates a watcher on every workspace JVM, emits warnings for the nested-JAR URL and
+     performs work that can never observe an update. An explicitly supplied external logging.config
+     remains free to opt into scanning in that external document. -->
+<configuration>
+
+    <!-- RuntimeStorageEnvironmentPostProcessor resolves and protects DATA_DIR before logging starts. -->
+    <springProperty scope="context" name="DATA_DIR"           source="harnex.data-dir"/>
+    <springProperty scope="context" name="LOG_DIR"             source="harnex.log.dir"            defaultValue="${DATA_DIR}/diagnostics/logs"/>
+    <springProperty scope="context" name="LOG_ARCHIVE_PATTERN" source="harnex.log.archive-pattern"/>
+    <springProperty scope="context" name="LOG_LEVEL_ROOT"      source="harnex.log.level.root"     defaultValue="INFO"/>
+    <springProperty scope="context" name="LOG_LEVEL_APP"       source="harnex.log.level.app"      defaultValue="INFO"/>
+    <springProperty scope="context" name="LOG_RETENTION_DAYS"  source="harnex.log.retention-days" defaultValue="7"/>
+    <springProperty scope="context" name="LOG_TOTAL_SIZE_CAP"  source="harnex.log.total-size-cap" defaultValue="20MB"/>
+
+    <!-- Mirrors the pattern previously inlined in application.yml (`logging.pattern.console`). -->
+    <property name="PATTERN" value="%d{HH:mm:ss.SSS} %-5level [%thread] [%X{traceId:-}] %logger{36} - %msg%n"/>
+    <property name="FILE_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{traceId:-}] %logger{36} - %msg%n"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/harnex.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- Daily slice + size cap. %i is required by SizeAndTimeBased even when only
+                 cap-based rotation fires (Logback contract). -->
+            <fileNamePattern>${LOG_ARCHIVE_PATTERN}</fileNamePattern>
+            <maxFileSize>5MB</maxFileSize>
+            <maxHistory>${LOG_RETENTION_DAYS}</maxHistory>
+            <totalSizeCap>${LOG_TOTAL_SIZE_CAP}</totalSizeCap>
+            <!-- Sweep historical archives that already aged out at the moment the JVM starts
+                 (e.g. after a long downtime). Without this, the rolling policy only enforces
+                 the cap on next-rotation, leaving stale archives sitting on disk. -->
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${FILE_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <root level="${LOG_LEVEL_ROOT}">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+    <logger name="com.harnex" level="${LOG_LEVEL_APP}"/>
+
+</configuration>

@@ -1,0 +1,22 @@
+# Both Dockerfiles use a minimal repository-root build context.
+**
+!bin/
+!bin/**
+!backend/
+!backend/Dockerfile
+!backend/pom.xml
+!backend/src/
+!backend/src/**
+!frontend/
+!frontend/**
+!packages/
+!packages/protocol/
+!packages/protocol/**
+**/node_modules
+**/dist
+**/dist-ide
+**/target
+**/.env
+**/.env.*
+**/.harnex
+**/*.log

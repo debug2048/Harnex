@@ -1,0 +1,18 @@
+# Rust / Cargo build output
+/target/
+
+# Tauri-generated schemas & artifacts
+/gen/
+
+# Staged bundle inputs produced by `node bin/desktop.mjs` (NOT committed — built on demand)
+/resources/harnex.jar
+/resources/jre/
+/resources/ui/
+
+# Generated icon set (regenerated from a source PNG by `tauri icon`; keep icons/source.png if you add one)
+/icons/*.png
+/icons/*.ico
+/icons/*.icns
+/icons/android/
+/icons/ios/
+!/icons/source.png

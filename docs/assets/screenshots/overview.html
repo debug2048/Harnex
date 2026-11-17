@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Harnex interface overview</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 2000px; height: 1160px; overflow: hidden; background: #e9edf0; }
+    .overview { position: relative; width: 2000px; height: 1160px; }
+    .window {
+      position: absolute;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, .6);
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 18px 42px rgba(24, 31, 40, .18), 0 3px 9px rgba(24, 31, 40, .12);
+    }
+    .window img { display: block; width: 100%; height: auto; }
+    .vscode { left: 32px; top: 28px; width: 900px; z-index: 1; }
+    .settings { right: 32px; top: 28px; width: 758px; z-index: 2; }
+    .agent {
+      left: 350px; top: 175px; width: 1300px; z-index: 3;
+      box-shadow: 0 24px 56px rgba(24, 31, 40, .22), 0 4px 12px rgba(24, 31, 40, .13);
+    }
+    .image { left: 32px; top: 670px; width: 680px; z-index: 4; }
+    .tui { right: 32px; top: 730px; width: 658px; z-index: 5; }
+  </style>
+</head>
+<body>
+  <main class="overview" aria-label="Harnex Agent, settings, image creation, TUI and VS Code">
+    <div class="window vscode"><img src="overview-sources/vscode.png" alt="VS Code with the Harnex extension"></div>
+    <div class="window settings"><img src="overview-sources/settings-zh-CN.png" alt="Settings in Vitesse theme"></div>
+    <div class="window agent"><img src="overview-sources/agent-zh-CN.png" alt="Agent conversation and tool calls in Danque theme"></div>
+    <div class="window image"><img src="overview-sources/image-zh-CN.png" alt="Image creation in a dark conversation"></div>
+    <div class="window tui"><img src="overview-sources/tui.png" alt="Harnex terminal interface"></div>
+  </main>
+</body>
+</html>

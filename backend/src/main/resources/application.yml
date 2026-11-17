@@ -1,0 +1,93 @@
+server:
+  port: 8088
+  # Honour X-Forwarded-Proto / X-Forwarded-For when running behind a TLS-terminating reverse
+  # proxy (Nginx / Ingress / ALB). Without this, req.isSecure() returns false even on HTTPS
+  # because the back-end socket is plain HTTP, which silently strips the Secure flag from
+  # HARNEX_TOKEN / XSRF-TOKEN cookies and lets them ride over HTTP after a downgrade.
+  # Use `none` if you DON'T have a trusted proxy in front (avoids forwarded-header spoofing).
+  forward-headers-strategy: ${HARNEX_FORWARD_HEADERS_STRATEGY:framework}
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+  # Drain in-flight SSE streams before exit so a kubectl rollout doesn't sever active chats mid-message.
+  shutdown: graceful
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,text/event-stream,text/css,application/javascript
+    min-response-size: 1024
+
+spring:
+  application:
+    name: harnex
+  config:
+    # Whitelisted config imports. The JVM runs with cwd = the user's project root (so AGENTS.md
+    # discovery and relative file ops work), but HarnexApplication.main() pins
+    # spring.config.location to classpath-only — Spring's default `file:./` / `file:./config/`
+    # scan is DISABLED so a real Spring project's own application.yml in the project root can no
+    # longer be silently absorbed as Harnex config (a restart-persistent injection vector).
+    # Agent/Settings configuration is user-level. Workspace-owned Memory, Skills and
+    # Automations use dedicated APIs and storage, so a project-local agent-config.yml
+    # must not silently override Provider or safety policy.
+    import: "optional:classpath:/agent-config.yml"
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  mvc:
+    async:
+      # Kept above harnex.sse-timeout-ms so the emitter can detach cleanly. An SSE timeout never
+      # cancels its Run; the client reconnects with afterSeq and continues the same subscription.
+      request-timeout: 3660000
+  servlet:
+    multipart:
+      enabled: true
+      # Aligned with harnex.upload.maxSingleFileBytes (default 200 MiB). Spring's multipart
+      # cap applies BEFORE the business-layer check in UploadController, so leaving it at the
+      # old 50 MB silently rejected anything in (50 MB, harnex.upload.maxSingleFileBytes] with
+      # an opaque MaxUploadSizeExceededException — operators raising the harnex.upload limit
+      # had no way to actually push files larger than 50 MB through the door. Per-thread
+      # cumulative quota (harnex.upload.perThreadMaxBytes, default 1 GB) still bounds the disk
+      # footprint independently. If you set harnex.upload.maxSingleFileBytes higher than this,
+      # also raise these two values in lockstep.
+      max-file-size: 200MB
+      max-request-size: 220MB
+      file-size-threshold: 1MB
+
+logging:
+  level:
+    root: INFO
+    # INFO is the right default for production: DEBUG used to log full user prompts, tool
+    # arguments and provider responses, which then leaked into ELK / Splunk if shipped. Flip
+    # back to DEBUG locally with `--logging.level.com.harnex=DEBUG` when you need it.
+    com.harnex: INFO
+    # com.harnex.provider: DEBUG
+  pattern:
+    # %X{traceId} prints the per-request id bound by TraceIdConfig. Empty for non-HTTP threads
+    # (cron, MCP health-check, etc.) — that's intentional, keeps non-request logs short.
+    console: "%d{HH:mm:ss.SSS} %-5level [%thread] [%X{traceId:-}] %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Don't expose /actuator/prometheus by default — GC pause patterns + thread-pool
+        # depth + datasource URLs are useful to a targeted attacker. Re-enable in deployments
+        # that scrape it via:  --management.endpoints.web.exposure.include=health,info,metrics,prometheus
+        # (or restrict the management port: --management.server.address=127.0.0.1).
+        include: health,info,metrics
+  endpoint:
+    health:
+      # Single-user local: surface component details freely so `curl /actuator/health` is useful
+      # without an auth header. Re-tighten to `when_authorized` if the deployment becomes shared.
+      show-details: always
+      show-components: always
+      probes:
+        # Exposes /actuator/health/liveness and /actuator/health/readiness for container probes.
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

@@ -1,0 +1,56 @@
+[package]
+name = "Harnex-desktop"
+version = "1.0.0"
+description = "Harnex desktop host — bundled Vue SPA plus one local Workspace Runtime."
+authors = ["Harnex"]
+edition = "2021"
+rust-version = "1.88"
+license = "Apache-2.0"
+
+# The Tauri host keeps its runtime dependencies minimal: it serves the bundled Vue SPA,
+# spawns the JRE+jar, TCP-polls the Runtime and projects workspace lifecycle to that trusted
+# SPA. The native folder dialog is invoked only by the app-defined workspace picker command;
+# no general filesystem or shell plugin permission is exposed. See docs/04_部署方案.md.
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+harnex-host-runtime = { path = "../host-runtime" }
+tauri = { version = "2", features = ["tray-icon"] }
+# Removed autostart (not needed), removed updater for stability testing.
+tauri-plugin-dialog = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-updater = "2"
+tauri-plugin-window-state = "2"
+# Used only to build a correct file: URL for SPRING_CONFIG_ADDITIONAL_LOCATION (percent-encodes
+# spaces / # / non-ASCII paths). Already in the dependency graph transitively via tauri.
+url = "2"
+chrono = "0.4"
+serde_json = "1"
+sha2 = "0.10"
+tempfile = "3"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+ctrlc = { version = "3.4", features = ["termination"] }
+
+[target.'cfg(any(target_os = "macos", target_os = "linux"))'.dependencies]
+# Desktop-launched apps do not inherit shell PATH additions on either Unix desktop.
+# Cargo.lock pins the exact revision used by release builds.
+fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs", rev = "c4c45d503ea115a839aae718d02f79e7c7f0f673" }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+keyring = { version = "3", features = ["apple-native"] }
+
+[features]
+# Enabled by `tauri build`; lets the dev build skip the custom protocol for faster `tauri dev`.
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+panic = "abort"   # smaller binary; the shell has no recoverable panics worth unwinding
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
