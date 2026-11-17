@@ -295,7 +295,7 @@ function distIsStale() {
   }
   walk(join(PROJECT_ROOT, 'frontend', 'src'))
   walk(join(PROJECT_ROOT, 'frontend', 'public'))
-  for (const f of ['vite.config.ts', 'index.html', 'package.json', 'tsconfig.json']) {
+  for (const f of ['vite.config.ts', 'index.html', 'package.json', 'package-lock.json', 'tsconfig.json']) {
     const p = join(PROJECT_ROOT, 'frontend', f)
     if (existsSync(p)) { const m = statSync(p).mtimeMs; if (m > srcMt) srcMt = m }
   }
@@ -347,6 +347,21 @@ async function ensureJar() {
   return jar
 }
 
+async function ensureFrontendDependencies() {
+  const frontend = join(PROJECT_ROOT, 'frontend')
+  const suffix = IS_WIN ? '.cmd' : ''
+  const tools = [join('node_modules', '.bin', `vite${suffix}`),
+    join('node_modules', '.bin', `vue-tsc${suffix}`),
+    join('node_modules', 'typescript', 'lib', 'typescript.js')]
+  if (tools.every(file => existsSync(join(frontend, file)))) return
+  log('─── 前端构建依赖缺失，按 package-lock.json 安装（含开发依赖）───')
+  await runSync('frontend-npm-ci', IS_WIN ? 'npm.cmd' : 'npm',
+    ['ci', '--include=dev', '--include=optional', '--no-audit', '--no-fund'], frontend)
+  if (!tools.every(file => existsSync(join(frontend, file)))) {
+    throw new Error('前端构建工具未安装完整，请在 frontend 目录执行 npm ci --include=dev --include=optional。')
+  }
+}
+
 async function ensureDist() {
   if (noRebuild) {
     if (!existsSync(join(PROJECT_ROOT, 'frontend', 'dist', 'index.html')))
@@ -355,6 +370,7 @@ async function ensureDist() {
   }
   if (distIsStale()) {
     log('─── 前端源码已更新（或 dist 缺失），重新构建 ───')
+    await ensureFrontendDependencies()
     const npm = IS_WIN ? 'npm.cmd' : 'npm'
     await runSync('vite-build', npm, ['run', 'build'], join(PROJECT_ROOT, 'frontend'))
   } else {
@@ -433,6 +449,7 @@ async function startBackend(env) {
 }
 
 async function startFrontendDev() {
+  await ensureFrontendDependencies()
   await freePort(frontendPort, 'vite')
   const npm = IS_WIN ? 'npm.cmd' : 'npm'
   const env = { ...process.env,
