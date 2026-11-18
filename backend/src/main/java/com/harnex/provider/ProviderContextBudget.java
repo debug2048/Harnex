@@ -5,9 +5,11 @@ import com.harnex.net.HttpExchangeState;
 
 /** One capacity policy for task requests, summary requests and the model information shown in the UI. */
 public record ProviderContextBudget(int contextWindow, String source, int safetyReserve,
-    ProviderCapabilityRequest.OutputBudget output) {
+    ProviderCapabilityRequest.OutputBudget output, Integer maxInputTokens) {
 
-    public int inputTokens() { return contextWindow - output.reserve() - safetyReserve; }
+    public int inputTokens() {
+        return Math.min(contextWindow - output.reserve(), maxInputTokens == null ? contextWindow : maxInputTokens) - safetyReserve;
+    }
 
     public static ProviderContextBudget resolve(AgentConfig config, ResolvedProvider provider, String model,
         Integer outputOverride) {
@@ -25,9 +27,13 @@ public record ProviderContextBudget(int contextWindow, String source, int safety
                 HttpExchangeState.Acceptance.NOT_SENT, null, 0);
         }
         var profile = ProviderModelCapabilities.from(config, provider).forModel(selected);
+        if (profile.maxInputTokens() != null && profile.maxInputTokens() <= safety) {
+            throw new ProviderException("context_length_exceeded", "The model input limit cannot fit the safety reserve",
+                HttpExchangeState.Acceptance.NOT_SENT, null, 0);
+        }
         var output = ProviderCapabilityRequest.outputBudget(profile, outputOverride,
             provider.getMaxTokens() == null ? 0 : provider.getMaxTokens(),
             config.getSummarizer().getOutputReserveTokens(), window, safety);
-        return new ProviderContextBudget(window, source, safety, output);
+        return new ProviderContextBudget(window, source, safety, output, profile.maxInputTokens());
     }
 }

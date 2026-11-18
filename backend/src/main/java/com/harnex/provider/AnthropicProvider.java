@@ -63,7 +63,7 @@ public class AnthropicProvider extends AbstractHttpProvider {
     private static final int CONTINUATION_BOUNDARY_BYTES =
         ("{\"type\":\"" + CONTINUATION_BOUNDARY_TYPE + "\"}").getBytes(StandardCharsets.UTF_8).length;
     private static final Set<String> REPLAYABLE_CONTENT_BLOCK_TYPES =
-        Set.of("text", "thinking", "redacted_thinking", "tool_use", "server_tool_use");
+        Set.of("text", "thinking", "redacted_thinking", "tool_use", "server_tool_use", "compaction");
     private static final Set<String> SUPPORTED_IMAGE_MIMES =
         Set.of("image/jpeg", "image/png", "image/gif", "image/webp");
     private static final String PDF_MIME = "application/pdf";
@@ -71,6 +71,8 @@ public class AnthropicProvider extends AbstractHttpProvider {
     private static final int MAX_NATIVE_OUTPUT_ITEMS = 256;
     private static final int MAX_NATIVE_OUTPUT_BYTES = 8 * 1024 * 1024;
     private static final int MAX_PAUSE_CONTINUATIONS = 4;
+    private static final String COMPACTION_BETA = "compact-2026-09-04";
+    private final Map<String, Boolean> compactionCapabilities = new java.util.concurrent.ConcurrentHashMap<>();
     // CC emulation constants
     private static final String CC_VERSION_DEFAULT = "2.1.187";
     private static final String CC_SALT = "harnex";
@@ -78,6 +80,7 @@ public class AnthropicProvider extends AbstractHttpProvider {
         "advanced-tool-use-2025-11-20");
 
     private final Options opts;
+    private final String replayOwner;
     private final ProviderModelCapabilities modelCapabilities;
     private final boolean visionEnabled;
     /** Exact endpoint model ids explicitly configured for each native attachment modality. */
@@ -169,6 +172,7 @@ public class AnthropicProvider extends AbstractHttpProvider {
         super(name, (baseUrl == null || baseUrl.isBlank()) ? "https://api.anthropic.com" : baseUrl, apiKey,
             defaultModel, metrics, proxy);
         this.opts = opts == null ? Options.defaults() : opts;
+        this.replayOwner = replayOwner(resolveEndpoint(this.baseUrl, "/messages"), apiKey);
         this.modelCapabilities = modelCapabilities == null
             ? ProviderModelCapabilities.conservative("anthropic") : modelCapabilities;
         this.visionEnabled = visionEnabled;
@@ -632,7 +636,7 @@ public class AnthropicProvider extends AbstractHttpProvider {
             } else {
                 Map<String, Object> continuationBody = null;
                 try {
-                    continuation.add(nativeContentJson, nativeContentBlocks.size(), assistantText.toString(),
+                    continuation.add(tagNativeContent(nativeContentJson, body), nativeContentBlocks.size() + 1, assistantText.toString(),
                         thinkingText.toString());
                     continuationBody = continuationBody(body, nativeContentJson);
                 } catch (ProviderException pe) {
@@ -656,7 +660,7 @@ public class AnthropicProvider extends AbstractHttpProvider {
                     thinkingText.length());
                 assistantText.insert(0, continuation.visibleText());
                 thinkingText.insert(0, continuation.thinkingText());
-                nativeContentJson = combineNativeContent(continuation.nativeSegments(), nativeContentJson);
+                nativeContentJson = combineNativeContent(continuation.nativeSegments(), tagNativeContent(nativeContentJson, body));
                 if (nativeContentJson == null) {
                     throw new ProviderException("parse",
                         "Anthropic continued output could not be represented as complete native content");
@@ -721,6 +725,7 @@ public class AnthropicProvider extends AbstractHttpProvider {
                 payload.put("reasoningToken", thinkingSignature[0]);
             }
             if (nativeContentJson != null) {
+                if (!continuation.hasSegments()) nativeContentJson = tagNativeContent(nativeContentJson, body);
                 payload.put("responseOutputProvider", outputProviderId(requestModel));
                 payload.put("responseOutputItems", nativeContentJson);
             }
@@ -1072,8 +1077,96 @@ public class AnthropicProvider extends AbstractHttpProvider {
         });
     }
 
+    @Override public OneShotResult compact(ChatRequest request, long timeoutMs) {
+        String model = request.getModel() == null ? defaultModel : request.getModel();
+        long started = System.nanoTime();
+        if (!modelCapabilities.profile(model).thinkingPrefixBound() || !supportsCompaction(model, timeoutMs)) {
+            throw new ProviderException("native_compaction_unavailable", "Endpoint has not declared native compaction",
+                com.harnex.net.HttpExchangeState.Acceptance.NOT_SENT, null, 0);
+        }
+        PreparedBody prepared;
+        try (var scope = ProviderCallScope.preserveCompactionToolDefinitions()) {
+            prepared = prepareBody(request, false);
+        }
+        Map<String, Object> body = prepared.body();
+        body.put("compaction", Map.of("type", "summarize"));
+        body.remove("context_management");
+        body.remove("stop_sequences");
+        body.remove("tool_choice");
+        Request httpRequest = buildRequest(body, request.getIdempotencyKey()).newBuilder()
+            .header("anthropic-beta", compactionBetas()).build();
+        long remaining = timeoutMs - java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
+        if (remaining <= 0) throw new ProviderException("timeout", "Native compaction budget exhausted");
+        Call call = newCall(httpRequest);
+        return runWithTimeout(call, remaining, response -> {
+            JsonNode root = M.readTree(readBoundedSuccessBody(response));
+            ProviderTokenUsage usage = root.path("usage").isObject() ? ProviderUsage.anthropic(root.path("usage")) : null;
+            if (usage != null && metrics != null) usage.record(metrics);
+            JsonNode content = root.path("content");
+            if (!"compaction".equals(root.path("stop_reason").asText()) || !content.isArray() || content.size() != 1
+                || !"compaction".equals(content.get(0).path("type").asText())
+                || !content.get(0).path("signature").isTextual() || !content.get(0).path("content").isTextual()
+                || content.get(0).path("signature").asText("").isBlank()
+                || content.get(0).path("content").asText("").isBlank()) {
+                throw new ProviderException("incomplete", "Native compaction did not return a complete signed summary").withUsage(usage);
+            }
+            if (content.toString().getBytes(StandardCharsets.UTF_8).length > MAX_NATIVE_OUTPUT_BYTES) {
+                throw new ProviderException("agent_oversize", "Native compaction exceeded replay envelope").withUsage(usage);
+            }
+            List<Map<String, Object>> blocks = M.convertValue(content, new com.fasterxml.jackson.core.type.TypeReference<>() {});
+            ChatMessage summary = ChatMessage.assistant("[Compressed history summary]\n" + content.get(0).path("content").asText());
+            summary.setResponseOutputProvider(outputProviderId(model));
+            summary.setResponseOutputItems(AnthropicPrefixState.compacted(blocks, body, prepared.prefixStates()));
+            return new OneShotResult(M.writeValueAsString(summary), name, model, usage);
+        });
+    }
+
+    boolean canCompactNatively(String model) {
+        return model != null && modelCapabilities.profile(model).thinkingPrefixBound()
+            && !Boolean.FALSE.equals(compactionCapabilities.get(model));
+    }
+
+    boolean supportsCompaction(String model, long budgetMs) {
+        Boolean known = compactionCapabilities.get(model);
+        if (known != null) return known;
+        // A model name or relay URL is not proof. Ask the endpoint's non-billable Models API with the beta enabled.
+        var url = Objects.requireNonNull(okhttp3.HttpUrl.parse(resolveEndpoint(baseUrl, "/messages"))).newBuilder();
+        url.removePathSegment(url.build().pathSize() - 1).addPathSegment("models").addPathSegment(model);
+        Request.Builder request = new Request.Builder().url(url.build()).get()
+            .header("anthropic-version", API_VERSION).header("anthropic-beta", compactionBetas());
+        if (apiKey != null && !apiKey.isBlank()) request.header("x-api-key", apiKey);
+        try {
+            boolean supported = runWithTimeout(newCall(request.build()), Math.max(1, Math.min(5000, budgetMs)), response -> {
+                JsonNode capability = M.readTree(readBoundedSuccessBody(response)).path("capabilities").path("compaction");
+                return capability.isBoolean() ? capability.booleanValue()
+                    : capability.path("supported").isBoolean() && capability.path("supported").booleanValue();
+            });
+            compactionCapabilities.put(model, supported);
+            return supported;
+        } catch (ProviderException failure) {
+            if ("cancelled".equals(failure.code)) throw failure;
+            if (Set.of("400", "404", "405", "501").contains(failure.code)) compactionCapabilities.put(model, false);
+            // Unconfirmed metadata leaves the client summarizer available; transient errors are not cached.
+            return false;
+        }
+    }
+
+    private String compactionBetas() {
+        var betas = new LinkedHashSet<String>();
+        if (opts.betas() != null) betas.addAll(opts.betas());
+        if (opts.emulation()) betas.addAll(CC_BETAS);
+        betas.add(COMPACTION_BETA);
+        return String.join(",", betas);
+    }
+
     /** Build the JSON body. {@code stream=true} adds the SSE flag; oneShot sends {@code stream=false} explicitly. */
     private Map<String, Object> buildBody(ChatRequest req, boolean stream) {
+        return prepareBody(req, stream).body();
+    }
+
+    private record PreparedBody(Map<String, Object> body, List<String> prefixStates) {}
+
+    private PreparedBody prepareBody(ChatRequest req, boolean stream) {
         String model = req.getModel() == null ? defaultModel : req.getModel();
         ProviderModelCapabilities.Profile modelProfile = modelCapabilities.profile(model);
         if (!modelProfile.anthropicApi()) {
@@ -1106,7 +1199,7 @@ public class AnthropicProvider extends AbstractHttpProvider {
             if (cacheSystem) {
                 List<Map<String, Object>> sysBlocks = new ArrayList<>();
                 if (opts.emulation()) {
-                    sysBlocks.add(buildBillingBlock(req.getMessages()));
+                    sysBlocks.add(buildBillingBlock(req));
                 }
                 if (stableSystem.length() > 0) {
                     // Render order is tools → system → messages. Mark only the genuinely stable leading system
@@ -1123,7 +1216,7 @@ public class AnthropicProvider extends AbstractHttpProvider {
                 if (opts.emulation()) {
                     // Convert string system to block form so we can prepend the billing header
                     List<Map<String, Object>> sysBlocks = new ArrayList<>();
-                    sysBlocks.add(buildBillingBlock(req.getMessages()));
+                    sysBlocks.add(buildBillingBlock(req));
                     if (stableSystem.length() > 0) {
                         sysBlocks.add(textBlock(stableSystem.toString()));
                     }
@@ -1140,7 +1233,7 @@ public class AnthropicProvider extends AbstractHttpProvider {
             }
         } else if (opts.emulation()) {
             // No system content but CC emulation still needs the billing header
-            body.put("system", List.of(buildBillingBlock(req.getMessages())));
+            body.put("system", List.of(buildBillingBlock(req)));
         }
 
         body.put("messages", toApiMessages(rest, model));
@@ -1178,7 +1271,13 @@ public class AnthropicProvider extends AbstractHttpProvider {
         }
         ProviderCapabilityRequest.applyRequestOptions(body, modelProfile);
         PromptCachePlan.apply(body, req, modelProfile, opts.promptCaching());
-        return body;
+        List<String> states = AnthropicPrefixState.sanitize(body, modelProfile.thinkingPrefixBound());
+        return new PreparedBody(body, states);
+    }
+
+    private String tagNativeContent(String content, Map<String, Object> body) {
+        return modelCapabilities.profile(String.valueOf(body.get("model"))).thinkingPrefixBound()
+            ? AnthropicPrefixState.tag(content, body) : content;
     }
 
     private static void appendSystem(StringBuilder target, String content) {
@@ -1570,7 +1669,7 @@ public class AnthropicProvider extends AbstractHttpProvider {
                     blocks = new ArrayList<>();
                     continue;
                 }
-                if (!(type instanceof String t) || !isReplayableContentBlockType(t)) {
+                if (!(type instanceof String t) || !isReplayableContentBlockType(t) && !AnthropicPrefixState.isReceipt(t)) {
                     log.warn("Anthropic stored native content has unsupported block type {}; reconstructing", type);
                     return null;
                 }
@@ -1591,6 +1690,16 @@ public class AnthropicProvider extends AbstractHttpProvider {
                 log.warn("Anthropic stored native tool_use blocks no longer match the assistant toolCalls; reconstructing");
                 return null;
             }
+            StringBuilder visible = new StringBuilder();
+            boolean hasReceipt = false;
+            for (var segment : messages) for (var block : segment) {
+                if (AnthropicPrefixState.isReceipt(block.get("type"))) hasReceipt = true;
+                if ("text".equals(block.get("type"))) visible.append(Objects.toString(block.get("text"), ""));
+                if ("compaction".equals(block.get("type"))) {
+                    visible.append("[Compressed history summary]\n").append(Objects.toString(block.get("content"), ""));
+                }
+            }
+            if (hasReceipt && !visible.toString().equals(Objects.toString(message.getContent(), ""))) return null;
             return messages;
         } catch (Exception ex) {
             log.warn("Anthropic could not parse stored native content for replay: {}", ex.getMessage());
@@ -1661,7 +1770,15 @@ public class AnthropicProvider extends AbstractHttpProvider {
     }
 
     private String outputProviderId(String model) {
-        return OUTPUT_PROVIDER + ":" + name + ":" + normaliseModelId(model);
+        String id = OUTPUT_PROVIDER + ":" + name + ":" + normaliseModelId(model);
+        return modelCapabilities.profile(model).thinkingPrefixBound() ? id + ":" + replayOwner : id;
+    }
+
+    private static String replayOwner(String endpoint, String key) {
+        try {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
+                .digest((endpoint + "\n" + Objects.toString(key, "")).getBytes(StandardCharsets.UTF_8)));
+        } catch (Exception failure) { throw new IllegalStateException("Cannot identify replay owner", failure); }
     }
 
     private boolean outputStateProducedHere(String provenance, String model) {
@@ -1745,6 +1862,7 @@ public class AnthropicProvider extends AbstractHttpProvider {
                 if (!allBetas.contains(ccBeta)) allBetas.add(ccBeta);
             }
         }
+        if (containsCompaction(body)) allBetas.add(COMPACTION_BETA);
         if (!allBetas.isEmpty()) {
             b.addHeader("anthropic-beta", String.join(",", allBetas));
         }
@@ -1775,10 +1893,33 @@ public class AnthropicProvider extends AbstractHttpProvider {
         return b.build();
     }
 
+    private static boolean containsCompaction(Map<String, Object> body) {
+        if (body.get("messages") instanceof List<?> messages) for (Object value : messages) {
+            if (value instanceof Map<?, ?> message && message.get("content") instanceof List<?> content) {
+                for (Object item : content) if (item instanceof Map<?, ?> block && "compaction".equals(block.get("type"))) return true;
+            }
+        }
+        return false;
+    }
+
     // ──── CC Emulation helpers ────────────────────────────────────────────────────────────────────
 
     /** Build the billing-header system block injected at index 0 when CC emulation is active. */
-    private Map<String, Object> buildBillingBlock(List<ChatMessage> messages) {
+    private Map<String, Object> buildBillingBlock(ChatRequest request) {
+        List<ChatMessage> messages = request.getMessages();
+        String model = request.getModel() == null ? defaultModel : request.getModel();
+        // Native compaction can remove the first user message. Restore the original CLI prefix from our local
+        // receipt instead of deriving a different billing header for the retained thinking on the next request.
+        for (ChatMessage message : messages) {
+            if (!outputStateProducedHere(message.getResponseOutputProvider(), model) || message.getResponseOutputItems() == null) continue;
+            try {
+                for (JsonNode block : M.readTree(message.getResponseOutputItems())) {
+                    String billing = block.path("billing").asText("");
+                    if (AnthropicPrefixState.isReceipt(block.path("type").asText())
+                        && billing.startsWith("x-anthropic-billing-header:") && billing.length() <= 512) return textBlock(billing);
+                }
+            } catch (IOException ignored) { /* Malformed replay is reconstructed without private state below. */ }
+        }
         String firstUserMsg = extractFirstUserMessage(messages);
         String ccVer = opts.ccVersion();
         String suffix = computeCcVersionSuffix(firstUserMsg, ccVer);

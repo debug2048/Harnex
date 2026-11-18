@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.harnex.model.ToolCall;
+import com.harnex.model.ChatMessage;
 import lombok.extern.slf4j.Slf4j;
 
 /** Provider-native replay validation after the execution layer has applied its tool policy. */
@@ -12,6 +13,48 @@ import lombok.extern.slf4j.Slf4j;
 public final class NativeResponseReplay {
     private static final ObjectMapper M = new ObjectMapper();
     private NativeResponseReplay() {}
+
+    /** Client rewrites invalidate Claude thinking after the edited prefix, but not text or tool-call pairs. */
+    public static List<ChatMessage> withoutAnthropicThinking(List<ChatMessage> messages, int from) {
+        List<ChatMessage> result = new ArrayList<>();
+        for (int i = 0; i < messages.size(); i++) {
+            ChatMessage original = messages.get(i);
+            if (i < from) { result.add(original); continue; }
+            boolean reasoning = original.getReasoningProvider() != null && original.getReasoningProvider().startsWith("anthropic:");
+            boolean nativeOutput = original.getResponseOutputProvider() != null && original.getResponseOutputProvider().startsWith("anthropic:");
+            if (!reasoning && !nativeOutput) { result.add(original); continue; }
+            if (original.isReasoningBlock()) continue;
+            ChatMessage message = original.toBuilder().build();
+            if (reasoning) {
+                message.setReasoning(null);
+                message.setReasoningToken(null);
+                message.setReasoningProvider(null);
+            }
+            if (nativeOutput && message.getResponseOutputItems() != null) {
+                try {
+                    var blocks = M.readTree(message.getResponseOutputItems());
+                    if (!blocks.isArray()) throw new IllegalArgumentException("native content is not an array");
+                    var retained = M.createArrayNode();
+                    boolean boundary = false;
+                    for (var block : blocks) {
+                        String type = block.path("type").asText();
+                        if (List.of("thinking", "redacted_thinking", AnthropicPrefixState.RECEIPT).contains(type)) continue;
+                        if ("harnex_anthropic_message_boundary".equals(type)) { boundary = !retained.isEmpty(); continue; }
+                        if (boundary) { retained.addObject().put("type", "harnex_anthropic_message_boundary"); boundary = false; }
+                        retained.add(block);
+                    }
+                    message.setResponseOutputItems(retained.isEmpty() ? null : retained.toString());
+                } catch (Exception malformed) {
+                    message.setResponseOutputItems(null);
+                }
+                if (message.getResponseOutputItems() == null) message.setResponseOutputProvider(null);
+            }
+            if ((message.getContent() != null && !message.getContent().isBlank())
+                || message.getToolCalls() != null && !message.getToolCalls().isEmpty()
+                || message.getResponseOutputItems() != null) result.add(message);
+        }
+        return result;
+    }
 
     /**
      * Verify that provider-native output still describes exactly the function calls the middleware-approved loop will

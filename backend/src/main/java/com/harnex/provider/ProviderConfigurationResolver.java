@@ -504,6 +504,9 @@ public final class ProviderConfigurationResolver {
         if (overlay.getOutputReserveTokens() != null) {
             merged.setOutputReserveTokens(overlay.getOutputReserveTokens());
         }
+        if (overlay.getMaxInputTokens() != null) {
+            merged.setMaxInputTokens(overlay.getMaxInputTokens());
+        }
         if (overlay.getAudioInputEncoding() != null) {
             merged.setAudioInputEncoding(overlay.getAudioInputEncoding());
         }
@@ -542,6 +545,9 @@ public final class ProviderConfigurationResolver {
         }
         if (overlay.getStrictTerminal() != null) {
             merged.setStrictTerminal(overlay.getStrictTerminal());
+        }
+        if (overlay.getThinkingPrefixBound() != null) {
+            merged.setThinkingPrefixBound(overlay.getThinkingPrefixBound());
         }
         if (overlay.getNativeWebSearch() != null) {
             merged.setNativeWebSearch(overlay.getNativeWebSearch());

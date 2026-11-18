@@ -108,7 +108,7 @@ public final class SummaryExecutionService implements AutoCloseable {
 
     private static void recordFailure(Resources resources, String key, String code) {
         if (code != null && List.of("cancelled", "budget_exhausted", "summarizer_busy", "summarizer_cooling_down",
-            "incomplete", "summary_capacity", "summary_prefix_unsupported").contains(code)) return;
+            "incomplete", "summary_capacity", "summary_prefix_unsupported", "native_compaction_unavailable").contains(code)) return;
         resources.failures.compute(key, (ignored, previous) -> {
             int failures = previous == null ? 1 : Math.min(100, previous.failures() + 1);
             boolean configuration = "config".equals(code) || "401".equals(code) || "403".equals(code);
@@ -246,7 +246,7 @@ public final class SummaryExecutionService implements AutoCloseable {
         usage.put("cacheWriteInput", reported == null ? 0 : reported.cacheWriteInput());
         usage.put("reasoning", reported == null ? 0 : reported.reasoning());
         usage.put("kind", "summarizer");
-        usage.put("strategy", request == null ? "rendered" : "prefix");
+        usage.put("strategy", request == null ? "rendered" : request.isNativeCompaction() ? "native" : "prefix");
         usage.put("estimated", reported == null);
         if (provider != null) usage.put("provider", provider);
         if (model != null) usage.put("model", model);

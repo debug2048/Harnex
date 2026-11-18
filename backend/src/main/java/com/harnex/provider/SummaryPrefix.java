@@ -22,14 +22,22 @@ public final class SummaryPrefix {
 
     /** Require the entire previously sent prefix to survive. A changed branch, overlay or tool catalogue opts out. */
     public static ModelProvider.ChatRequest prepare(ModelProvider.ChatRequest previous, ModelProvider.ChatRequest current) {
-        if (previous == null || current == null || previous.isNativeWebSearchActive()
+        return prepare(previous, current, false);
+    }
+
+    public static ModelProvider.ChatRequest prepareCompaction(ModelProvider.ChatRequest previous, ModelProvider.ChatRequest current) {
+        return prepare(previous, current, true);
+    }
+
+    private static ModelProvider.ChatRequest prepare(ModelProvider.ChatRequest previous, ModelProvider.ChatRequest current, boolean compaction) {
+        if (previous == null || current == null || !compaction && previous.isNativeWebSearchActive()
             || previous.getMessages().isEmpty() || current.getMessages().size() < previous.getMessages().size()
             || !JSON.valueToTree(tools(previous)).toString().equals(JSON.valueToTree(tools(current)).toString())) return null;
         var messages = current.getMessages().stream().map(SummaryPrefix::wireMessage).toList();
         for (int i = 0; i < previous.getMessages().size(); i++) {
             if (!previous.getMessages().get(i).equals(messages.get(i))) return null;
         }
-        return previous.toBuilder().messages(messages).webSearchAllowed(false).build();
+        return previous.toBuilder().messages(messages).webSearchAllowed(compaction && previous.isWebSearchAllowed()).build();
     }
 
     public static ModelProvider.ChatRequest append(ModelProvider.ChatRequest prefix, String instruction) {
@@ -39,6 +47,10 @@ public final class SummaryPrefix {
 
     private static List<Map<String, Object>> tools(ModelProvider.ChatRequest request) {
         return request.getTools() == null ? List.of() : request.getTools();
+    }
+
+    public static boolean sameWireMessage(ChatMessage left, ChatMessage right) {
+        return wireMessage(left).equals(wireMessage(right));
     }
 
     private static ChatMessage wireMessage(ChatMessage message) {

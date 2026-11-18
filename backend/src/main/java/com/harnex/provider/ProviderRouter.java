@@ -172,6 +172,36 @@ public class ProviderRouter {
         return SummaryTargets.resolve(providerRegistry, defaultProviderName().orElse(null), provider, model);
     }
 
+    /** Only prefix-bound Claude models participate; the adapter still verifies the actual endpoint capability. */
+    public boolean canCompactNatively(String provider, String model) {
+        if (liveRuntime != null) try (var scope = liveRuntime.acquire()) {
+            return scope.router().canCompactNatively(provider, model);
+        }
+        ResolvedProvider configured = providerRegistry.find(provider).orElse(null);
+        String selected = model == null || model.isBlank() ? configured == null ? null : configured.getDefaultModel() : model;
+        return configured != null && configuredProvider(provider) instanceof AnthropicProvider anthropic
+            && anthropic.canCompactNatively(selected);
+    }
+
+    public boolean thinkingPrefixBound(String provider, String model) {
+        if (liveRuntime != null) try (var scope = liveRuntime.acquire()) {
+            return scope.router().thinkingPrefixBound(provider, model);
+        }
+        ResolvedProvider configured = providerRegistry.find(provider).orElse(null);
+        if (configured == null) return false;
+        String selected = model == null || model.isBlank() ? configured.getDefaultModel() : model;
+        return ProviderModelCapabilities.from(cfg, configured).forModel(selected).thinkingPrefixBound();
+    }
+
+    /** Non-billable capability discovery, performed only when an actual compaction is due. */
+    public boolean confirmNativeCompaction(String provider, String model, long timeoutMs) {
+        if (liveRuntime != null) try (var scope = liveRuntime.acquire()) {
+            return scope.router().confirmNativeCompaction(provider, model, timeoutMs);
+        }
+        return canCompactNatively(provider, model) && configuredProvider(provider) instanceof AnthropicProvider anthropic
+            && anthropic.supportsCompaction(model, timeoutMs);
+    }
+
     /** The same model/output capacity used by request planning; 0 when no target is configured. */
     public int inputBudget(String providerName, String model, Integer outputOverride) {
         if (liveRuntime != null) try (var scope = liveRuntime.acquire()) {
@@ -199,7 +229,9 @@ public class ProviderRouter {
         boolean reasoning = profile.reasoningSupported() || profile.thinking().supported()
             && profile.thinking().defaultState() != ProviderModelCapabilities.ThinkingState.OFF;
         if ("none".equalsIgnoreCase(provider.getEffort()) || "off".equalsIgnoreCase(provider.getThinking())) reasoning = false;
-        return new SummaryBudget.ModelCapacity(budget.contextWindow(), budget.safetyReserve(),
+        int window = profile.maxInputTokens() == null ? budget.contextWindow()
+            : Math.min(budget.contextWindow(), profile.maxInputTokens() + budget.safetyReserve());
+        return new SummaryBudget.ModelCapacity(window, budget.safetyReserve(),
             definition == null ? null : definition.getMaxOutputTokens(), reasoning);
     }
 
@@ -570,7 +602,8 @@ public class ProviderRouter {
 
     public OneShotResult oneShotRequestOn(String providerName, String model, ModelProvider.ChatRequest request,
         long timeoutMs, String healthNamespace) {
-        var utility = request.toBuilder().provider(providerName).model(model).webSearchAllowed(false)
+        var utility = request.toBuilder().provider(providerName).model(model)
+            .webSearchAllowed(request.isNativeCompaction() && request.isWebSearchAllowed())
             .targetPreparation(null).idempotencyKey(null).build();
         return oneShotOn(providerName, model, utility.getMessages(), utility.getTemperature(), timeoutMs,
             utility.getMaxTokens(), healthNamespace, utility);
@@ -619,7 +652,7 @@ public class ProviderRouter {
             ProviderCallScope.validateTarget(provider.getName(),targetModel);
             trace.dispatching();
             OneShotResult result = request == null ? provider.oneShot(model, messages, temperature, timeoutMs, maxOutputTokens)
-                : provider.oneShot(request, timeoutMs);
+                : request.isNativeCompaction() ? provider.compact(request, timeoutMs) : provider.oneShot(request, timeoutMs);
             trace.usage(result.usage());
             trace.finishAttempt(null);
             health.recordSuccess(target);

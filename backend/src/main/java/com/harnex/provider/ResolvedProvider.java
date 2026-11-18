@@ -367,6 +367,7 @@ public final class ResolvedProvider {
         copy.setMaxTokensField(source.getMaxTokensField());
         copy.setDefaultMaxTokens(source.getDefaultMaxTokens());
         copy.setOutputReserveTokens(source.getOutputReserveTokens());
+        copy.setMaxInputTokens(source.getMaxInputTokens());
         copy.setAudioInputEncoding(source.getAudioInputEncoding());
         copy.setStreaming(source.getStreaming());
         copy.setStreamUsage(source.getStreamUsage());
@@ -382,6 +383,7 @@ public final class ResolvedProvider {
             ? null : new ArrayList<>(source.getThinkingRequiredEfforts()));
         copy.setPromptCacheMode(source.getPromptCacheMode());
         copy.setStrictTerminal(source.getStrictTerminal());
+        copy.setThinkingPrefixBound(source.getThinkingPrefixBound());
         copy.setNativeWebSearch(source.getNativeWebSearch());
         copy.setNativeWebSearchType(source.getNativeWebSearchType());
         copy.setThinking(copyThinking(source.getThinking()));

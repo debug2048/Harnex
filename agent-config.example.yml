@@ -316,6 +316,10 @@ harnex:
   # Haiku 5.5 默认自适应思考，关闭时不能使用 xhigh/max；Kimi K3.1 和 GLM FlashX 不支持关闭思考。
   # DeepSeek V4 Pro 与 Flash 均完整回传历史推理；固定旧快照的规则不变。
   # Gemini 4 Argon 此处接入标准 Interactions；后台长输出的异步生命周期尚未接入。
+  # 2026-11-18：openai-responses 支持 gpt-6.2-astra / gpt-6.2-sol；两者不接受 none/minimal，
+  # Chat 接口不能调用工具。anthropic-messages 支持 claude-fable-5-2 / claude-mythos-5-2，
+  # dashscope-qwen-chat 支持 qwen4-max（完整思维链模式）。原有默认型号保持不变。
+  # Claude 的前缀绑定与压缩兼容由适配器处理，无需新增用户配置；原生压缩须先由端点能力确认。
   #
   # 只有维护者需要扩展 profile。profile 是内部接入模板，可包含安全的官方默认地址/型号/目录；
   # provider 的非空字段始终覆盖这些默认值。profile key 使用同一稳定 id 规则：

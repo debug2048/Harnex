@@ -79,6 +79,12 @@ public interface ModelProvider {
             com.harnex.net.HttpExchangeState.Acceptance.NOT_SENT, null, 0);
     }
 
+    /** Optional native history compaction. The result is an encoded ChatMessage, not an ordinary completion. */
+    default OneShotResult compact(ChatRequest request, long timeoutMs) {
+        throw new ProviderException("native_compaction_unavailable", "Endpoint does not declare native compaction",
+            com.harnex.net.HttpExchangeState.Acceptance.NOT_SENT, null, 0);
+    }
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
@@ -140,6 +146,9 @@ public interface ModelProvider {
         private TargetPreparation targetPreparation;
         @JsonIgnore
         private String contextPlanId;
+        /** Internal utility operation; never a user-facing setting or an upstream field. */
+        @JsonIgnore
+        private boolean nativeCompaction;
     }
 
     @FunctionalInterface

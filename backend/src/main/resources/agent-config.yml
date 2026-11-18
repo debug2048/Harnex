@@ -173,6 +173,18 @@ harnex:
       prompt-cache-key: true
       prompt-cache-explicit: true
       model-capability-rules:
+        # Verified 2026-11-18: GPT-6.2 requires Responses for every function-tool call.
+        # https://developers.openai.com/api/docs/guides/latest-model/gpt-6.2-astra
+        - match: 'gpt-6\.2-(?:astra|sol)'
+          capabilities:
+            instruction-role: developer
+            max-tokens-field: max_completion_tokens
+            output-reserve-tokens: 128000
+            max-input-tokens: 922000
+            function-tools: false
+            sampling-policy: omit
+            reasoning-efforts: [low, medium, high, xhigh, max]
+            prompt-cache-mode: openai_explicit
         # Terra accepts none, but all function tools still require Responses (2026-11-02).
         # https://developers.openai.com/api/docs/models/gpt-6.1-terra
         - match: 'gpt-6\.1-terra'
@@ -223,6 +235,8 @@ harnex:
             sampling-policy: omit
             reasoning-efforts: [low, medium, high]
       models:
+        - { id: gpt-6.2-astra, context-window: 1050000, max-output-tokens: 128000, label: "GPT-6.2 Astra (Chat only)", tier: high, description: "Use openai-responses for Agent tools", input-modalities: [text, image] }
+        - { id: gpt-6.2-sol, context-window: 1050000, max-output-tokens: 128000, label: "GPT-6.2 Sol (Chat only)", tier: medium, description: "Use openai-responses for Agent tools", input-modalities: [text, image] }
         - { id: gpt-6-astra, context-window: 1050000, label: "GPT-6 Astra (Chat only)", tier: high, description: "Use openai-responses for Agent tools", input-modalities: [text, image] }
         - { id: gpt-6.1-sol, context-window: 1050000, label: "GPT-6.1 Sol (Chat only)", tier: high, description: "Use openai-responses for Agent tools", input-modalities: [text, image] }
         - { id: gpt-6.1-terra, context-window: 1050000, label: "GPT-6.1 Terra (Chat only)", tier: medium, description: "Use openai-responses for Agent tools", input-modalities: [text, image] }
@@ -253,6 +267,14 @@ harnex:
       prompt-cache-key: true
       prompt-cache-explicit: true
       model-capability-rules:
+        - match: 'gpt-6\.2-(?:astra|sol)'
+          capabilities:
+            output-reserve-tokens: 128000
+            max-input-tokens: 922000
+            reasoning-efforts: [low, medium, high, xhigh, max]
+            prompt-cache-mode: openai_explicit
+            native-web-search: true
+            native-web-search-type: web_search
         - match: 'gpt-6\.1-terra'
           capabilities:
             reasoning-efforts: [none, low, medium, high, xhigh, max]
@@ -291,6 +313,8 @@ harnex:
             native-web-search: true
             native-web-search-type: web_search
       models:
+        - { id: gpt-6.2-astra, context-window: 1050000, max-output-tokens: 128000, label: "GPT-6.2 Astra", tier: high, input-modalities: [text, image, file] }
+        - { id: gpt-6.2-sol, context-window: 1050000, max-output-tokens: 128000, label: "GPT-6.2 Sol", tier: medium, input-modalities: [text, image, file] }
         - { id: gpt-6-astra, context-window: 1050000, label: "GPT-6 Astra", tier: high, input-modalities: [text, image, file] }
         - { id: gpt-6.1-sol, context-window: 1050000, label: "GPT-6.1 Sol", tier: high, input-modalities: [text, image, file] }
         - { id: gpt-6.1-terra, context-window: 1050000, label: "GPT-6.1 Terra", tier: medium, input-modalities: [text, image, file] }
@@ -324,10 +348,13 @@ harnex:
       strict-terminal: false
       model-capability-rules:
         # https://platform.claude.com/docs/en/models/opus-5-5/migration-guide
-        - match: 'claude-(?:(?:fable|mythos)-5-1|opus-5-5)'
+        # Prefix-bound thinking also applies to the existing 5.1 / 5.5 models.
+        # https://platform.claude.com/docs/en/build-with-claude/preserved-thinking/prefix-checks
+        - match: 'claude-(?:(?:fable|mythos)-5-[12]|opus-5-5)'
           capabilities:
             default-max-tokens: 64000
             strict-terminal: true
+            thinking-prefix-bound: true
             sampling-policy: omit
             reasoning-efforts: [low, medium, high, xhigh, max]
             native-web-search: true
@@ -339,7 +366,23 @@ harnex:
               send-default: false
         # Haiku 5.5 shares this thinking/effort contract, not Haiku 4.5's legacy behavior.
         # https://platform.claude.com/docs/en/models/haiku-5-5/migration-guide
-        - match: 'claude-(?:opus-5|haiku-5-5)'
+        - match: 'claude-haiku-5-5'
+          capabilities:
+            default-max-tokens: 64000
+            strict-terminal: true
+            thinking-prefix-bound: true
+            sampling-policy: omit
+            reasoning-efforts: [low, medium, high, xhigh, max]
+            thinking-required-efforts: [xhigh, max]
+            native-web-search: true
+            native-web-search-type: web_search_20260318
+            thinking:
+              field: thinking
+              default-state: "on"
+              enabled-object: { type: adaptive }
+              disabled-object: { type: disabled }
+              send-default: false
+        - match: 'claude-opus-5'
           capabilities:
             default-max-tokens: 64000
             strict-terminal: true
@@ -387,6 +430,7 @@ harnex:
           capabilities:
             default-max-tokens: 64000
             strict-terminal: true
+            thinking-prefix-bound: true
             sampling-policy: omit
             reasoning-efforts: [low, medium, high, xhigh, max]
             thinking-required-efforts: [xhigh, max]
@@ -433,6 +477,8 @@ harnex:
             sampling-policy: always
             reasoning-efforts: []
       models:
+        - { id: claude-fable-5-2, context-window: 1000000, max-output-tokens: 128000, label: "Claude Fable 5.2", tier: high, input-modalities: [text, image, pdf] }
+        - { id: claude-mythos-5-2, context-window: 1000000, max-output-tokens: 128000, label: "Claude Mythos 5.2", tier: high, description: "Restricted availability", input-modalities: [text, image, pdf] }
         - { id: claude-fable-5-1, context-window: 1000000, label: "Claude Fable 5.1", tier: high, input-modalities: [text, image, pdf] }
         - { id: claude-mythos-5-1, context-window: 1000000, label: "Claude Mythos 5.1", tier: high, description: "Restricted availability", input-modalities: [text, image, pdf] }
         - { id: claude-opus-5-5, context-window: 1000000, label: "Claude Opus 5.5", tier: high, input-modalities: [text, image, pdf] }
@@ -639,6 +685,15 @@ harnex:
       prompt-cache-mode: content_cache_control
       prompt-caching: true
       model-capability-rules:
+        # Standard full-thinking mode. Summary/encrypted output is a separate wire contract.
+        # https://help.aliyun.com/zh/model-studio/qwen-api-via-openai-chat-completions
+        - match: 'qwen4-max'
+          capabilities:
+            output-reserve-tokens: 262144
+            reasoning-efforts: [none, minimal, low, medium, high, xhigh, max]
+            reasoning-replay: all
+            reasoning-history: required
+            reasoning-history-field: preserve_thinking
         # Open-weight 3.8 models accept effort and vision, but are not in the preserve_thinking
         # support list. Do not inherit Max/Flash's preservation or unverified explicit cache fields.
         # https://help.aliyun.com/zh/model-studio/qwen-api-via-openai-chat-completions
@@ -715,6 +770,7 @@ harnex:
               disabled-value: false
               send-default: false
       models:
+        - { id: qwen4-max, context-window: 1000000, max-output-tokens: 262144, label: "Qwen4 Max", tier: high, input-modalities: [text, image, video] }
         - { id: qwen3.8-max, context-window: 1000000, label: "Qwen3.8 Max", tier: high, input-modalities: [text, image, video] }
         - { id: qwen3.8-max-0902, context-window: 1000000, label: "Qwen3.8 Max (0902)", tier: high, input-modalities: [text, image, video] }
         - { id: qwen3.8-flash, context-window: 1000000, label: "Qwen3.8 Flash", tier: medium, input-modalities: [text, image, video] }

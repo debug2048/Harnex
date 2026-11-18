@@ -35,6 +35,13 @@ public final class ProviderCallScope implements AutoCloseable {
                 owner.onCancel(), owner.events(), false, owner.targetGuard());
         return new ProviderCallScope(restricted);
     }
+
+    /** Used only while serializing a native compaction: preserve the task's exact tool definitions, not tool execution. */
+    static ProviderCallScope preserveCompactionToolDefinitions() {
+        Context owner = CURRENT.get();
+        return new ProviderCallScope(owner == null ? null : new Context(owner.runId(), owner.threadId(), owner.stepId(),
+            owner.purpose(), owner.cancelled(), owner.onCancel(), owner.events(), true, owner.targetGuard()));
+    }
     public record CallIdentity(String callId,String attemptId) {}
     public record QueueTiming(long queuedAt,long workerStartedAt,long queueMillis) {}
     public static CallIdentity currentCall() { return CALL.get(); }

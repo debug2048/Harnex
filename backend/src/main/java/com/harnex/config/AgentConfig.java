@@ -662,6 +662,8 @@ public class AgentConfig {
         private Integer defaultMaxTokens;
         /** Estimated server-default output for context planning only; never sent as a request limit. */
         private Integer outputReserveTokens;
+        /** Independent model input ceiling; reducing requested output must not raise this limit. */
+        private Integer maxInputTokens;
         /** Chat input_audio.data encoding: base64 (default) or data_url; modalities still require an exact model. */
         private String audioInputEncoding;
         private Boolean streaming;
@@ -695,6 +697,8 @@ public class AgentConfig {
         private String promptCacheMode;
         /** Anthropic-only: buffer visible output until a validated terminal event (needed for late refusal). */
         private Boolean strictTerminal;
+        /** Anthropic model contract: signed thinking is bound to the preceding request content. */
+        private Boolean thinkingPrefixBound;
         /** Whether this exact/provider profile supports a native server-side web-search tool. */
         private Boolean nativeWebSearch;
         /** Native tool type/version, for example {@code web_search} or {@code web_search_20260318}. */

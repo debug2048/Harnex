@@ -283,6 +283,15 @@ public class SummarizationMiddleware implements Middleware {
         }
         worst.setContent(replacement);
         worst.setContextSourcesPartial(true);
+        if (prefixBound(ctx)) {
+            if (worst.getResponseOutputProvider() != null && worst.getResponseOutputProvider().startsWith("anthropic:")) {
+                worst.setResponseOutputItems(null);
+                worst.setResponseOutputProvider(null);
+            }
+            int changedFrom = worstIdx;
+            while (changedFrom > 0 && messages.get(changedFrom - 1).isReasoningBlock()) changedFrom--;
+            ctx.getThread().setMessages(com.harnex.provider.NativeResponseReplay.withoutAnthropicThinking(messages, changedFrom));
+        }
         log.warn("hard-ceiling guard truncated msg[{}] {} → {} chars", worstIdx, content.length(),
             replacement.length());
         return true;
@@ -450,6 +459,105 @@ public class SummarizationMiddleware implements Middleware {
         state.setLastObservedMessageTokens(afterMessages);
     }
 
+    private boolean tryNativeCompaction(AgentCtx ctx, AgentConfig.Summarizer settings, int before, String triggerReason) {
+        var previous = ctx.getLastTaskRequest();
+        if (!settings.isEnabled() || previous == null || ctx.getContextRequestProjection() == null
+            || ctx.getThread().getHumanTurnContext() == null) return false;
+        var target = router.summaryTarget(ctx.getLastProvider(), ctx.getLastModel()).orElse(null);
+        if (target == null || !target.key().equals(SummaryTargets.key(previous.getProvider(), previous.getModel()))
+            || !router.canCompactNatively(target.provider(), target.model())) return false;
+        var state = compressionState(ctx);
+        if (state.getLastCompressionAfterTokens() > 0
+            && before - state.getLastCompressionAfterTokens() < minimumNewContext(settings, ctx)) return false;
+        var current = ctx.getContextRequestProjection().get();
+        if (SummaryPrefix.prepareCompaction(previous, current) == null) return false;
+        var original = ctx.getThread().getMessages();
+        int boundary = previous.getMessages().size();
+        // Use a previously admitted input prefix. Its assistant response and all subsequent tool results stay
+        // contiguous. A projection with an extra leading system message cannot be mapped by ordinal safely.
+        if (boundary < 3 || boundary >= original.size() || !"system".equals(original.get(0).getRole())
+            || !"system".equals(previous.getMessages().get(0).getRole())) return false;
+        for (int i = 1; i < boundary; i++) {
+            if ("system".equals(original.get(i).getRole())
+                || !SummaryPrefix.sameWireMessage(previous.getMessages().get(i), original.get(i))) return false;
+        }
+        var pending = new java.util.HashSet<String>();
+        for (var message : original.subList(0, boundary)) {
+            if (message.getToolCalls() != null) for (var call : message.getToolCalls()) pending.add(call.getId());
+            if ("tool".equals(message.getRole())) pending.remove(message.getToolCallId());
+        }
+        if (!pending.isEmpty() || "tool".equals(original.get(boundary).getRole())) return false;
+        var time = new SummaryTimeBudget(settings.getTimeoutMs(),
+            () -> ctx.getRuntimeBudget() == null ? Long.MAX_VALUE : ctx.getRuntimeBudget().remainingMs());
+        var request = previous.toBuilder().nativeCompaction(true).build();
+        int retainedBudget = SummaryBudget.bodyTokens(SummaryBudget.retention(usableTokens(settings, ctx), settings.getMaxOutputTokens()));
+        var plan = summaryExecution.plan(target, request, settings.getMaxOutputTokens(), retainedBudget);
+        if (!plan.usable() || time.remainingMillis() <= 0 || summaryExecution.isCoolingDown(target)) return false;
+        if (!router.confirmNativeCompaction(target.provider(), target.model(), time.remainingMillis())) return false;
+        if (time.remainingMillis() <= 0 || ctx.isCancelled()) return false;
+        String id = "compression-" + (state.getContextGeneration() + 1);
+        emitCompressionStarted(ctx, id, triggerReason, before);
+        try {
+            var result = summaryExecution.execute(target, request, time.attemptMillis(settings.getAttemptTimeoutMs()),
+                plan.outputTokens(), summaryCallContext(ctx));
+            ChatMessage summary = JSON.readValue(result.content(), ChatMessage.class);
+            if (summary.getResponseOutputItems() == null || summary.getResponseOutputProvider() == null
+                || !summary.getResponseOutputProvider().startsWith("anthropic:")) {
+                throw new ProviderException("parse", "Native compaction returned no replay state");
+            }
+            var references = new LinkedHashSet<HistoryReference>();
+            for (var message : original.subList(1, boundary)) {
+                if (message.getContextSources() != null) references.addAll(message.getContextSources());
+            }
+            var sourceList = new ArrayList<>(references);
+            summary.setContextSources(List.copyOf(sourceList.subList(Math.max(0, sourceList.size() - 512), sourceList.size())));
+            summary.setContextSourcesPartial(sourceList.size() > 512
+                || original.subList(1, boundary).stream().anyMatch(ChatMessage::isContextSourcesPartial));
+            if (ctx.isCancelled()) throw new CancellationException("Native compaction cancelled");
+            int priorEstimate = requestTokens(ctx);
+            var kept = new ArrayList<ChatMessage>();
+            kept.add(original.get(0));
+            kept.add(summary);
+            kept.addAll(original.subList(boundary, original.size()));
+            int after;
+            int afterEstimate;
+            ctx.getThread().setMessages(kept);
+            try {
+                afterEstimate = requestTokens(ctx);
+                after = contextSize(ctx, settings);
+                if (ctx.isCancelled()) throw new CancellationException("Native compaction cancelled");
+                if (after >= before || after > hardLimit(settings, ctx)) {
+                    throw new ProviderException("context_length_exceeded", "Native compaction did not create sufficient context headroom");
+                }
+            } catch (RuntimeException failure) {
+                ctx.getThread().setMessages(original);
+                throw failure;
+            }
+            adjustObservedBaselineAfterRewrite(state, priorEstimate, afterEstimate);
+            state.setContextGeneration(state.getContextGeneration() + 1);
+            state.setLastCompressionAfterTokens(after);
+            resetCompressionPressure(state);
+            ctx.setLastTaskRequest(null);
+            summaryExecution.recordSuccess(target);
+            emitCompressionFinished(ctx, id, triggerReason, "completed", "model", before, after,
+                (int)Math.max(0L, (long)(before - after) * 100 / Math.max(1, before)), true);
+            return true;
+        } catch (ProviderException failure) {
+            if ("native_compaction_unavailable".equals(failure.code)) {
+                emitCompressionFinished(ctx, id, triggerReason, "skipped", "model", before, before, 0, false);
+                return false;
+            }
+            emitCompressionFinished(ctx, id, triggerReason, "failed", "model", before, before, 0, false);
+            throw failure;
+        } catch (CancellationException cancelled) {
+            emitCompressionFinished(ctx, id, triggerReason, "cancelled", "model", before, before, 0, false);
+            throw cancelled;
+        } catch (java.io.IOException failure) {
+            emitCompressionFinished(ctx, id, triggerReason, "failed", "model", before, before, 0, false);
+            throw new IllegalStateException("Cannot read native compaction state", failure);
+        }
+    }
+
     private boolean maybeCompress(AgentCtx ctx, boolean force, String triggerReason) {
         if (ctx.isCancelled()) return false;
         var msgs = ctx.getThread().getMessages();
@@ -460,6 +568,8 @@ public class SummarizationMiddleware implements Middleware {
         if (!force && total <= trigger) {
             return false;
         }
+        // Native compaction must see the sent prefix before reclaiming overlays or trimming history.
+        if (tryNativeCompaction(ctx, s, total, triggerReason)) return true;
         // Capture before reclaiming overlays: those exact bytes belong to the last main request's cache prefix.
         ModelProvider.ChatRequest prefix = !force && total < hardLimit(s, ctx) && s.isPrefixReuse()
             && ctx.getContextRequestProjection() != null
@@ -597,6 +707,8 @@ public class SummarizationMiddleware implements Middleware {
             var restoredTail = msgs.subList(actualTailStart, msgs.size());
             for (var message : pinned) if (!containsMessage(restoredTail, message)) kept.add(message);
             kept.addAll(restoredTail);
+            if (prefixBound(ctx)) kept = new ArrayList<>(com.harnex.provider.NativeResponseReplay
+                .withoutAnthropicThinking(kept, protectedHead.size()));
             int beforeMessageTokens = requestTokens(ctx);
             ctx.getThread().setMessages(kept);
             int afterMessageTokens = requestTokens(ctx);
@@ -635,6 +747,8 @@ public class SummarizationMiddleware implements Middleware {
         if (ctx.isCancelled()) return false;
         int before = requestTokens(ctx);
         if (!ConversationContinuity.discardDerivedOverlays(ctx)) return false;
+        if (prefixBound(ctx)) ctx.getThread().setMessages(com.harnex.provider.NativeResponseReplay
+            .withoutAnthropicThinking(ctx.getThread().getMessages(), 0));
         CompressionState state = compressionState(ctx);
         int after = requestTokens(ctx);
         adjustObservedBaselineAfterRewrite(state, before, after);
@@ -644,6 +758,11 @@ public class SummarizationMiddleware implements Middleware {
         if (hasUsefulHeadroom(ctx, beforeTotal, total)) resetCompressionPressure(state);
         clearRecoveredCompressionPressure(ctx, total);
         return true;
+    }
+
+    private boolean prefixBound(AgentCtx ctx) {
+        return router.thinkingPrefixBound(ctx.getLastProvider() == null ? ctx.getThread().getProvider()
+            : ctx.getLastProvider(), modelFor(ctx));
     }
 
     private static void emitCompressionStarted(AgentCtx ctx, String id, String triggerReason, int beforeTokens) {

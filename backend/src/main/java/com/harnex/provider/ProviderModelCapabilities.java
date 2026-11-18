@@ -361,7 +361,8 @@ public final class ProviderModelCapabilities {
         String instructionRole, MaxTokensField maxTokensField, Integer defaultMaxTokens, Integer outputReserveTokens,
         AudioInputEncoding audioInputEncoding,
         PromptCacheMode promptCacheMode, boolean strictTerminal, boolean nativeWebSearch, String nativeWebSearchType,
-        ThinkingSpec thinking, Set<String> inputModalities, Map<String, Object> requestOptions) {
+        ThinkingSpec thinking, Set<String> inputModalities, Map<String, Object> requestOptions,
+        boolean thinkingPrefixBound, Integer maxInputTokens) {
 
         public Profile {
             Objects.requireNonNull(api, "api");
@@ -455,9 +456,11 @@ public final class ProviderModelCapabilities {
         private MaxTokensField maxTokensField;
         private Integer defaultMaxTokens;
         private Integer outputReserveTokens;
+        private Integer maxInputTokens;
         private AudioInputEncoding audioInputEncoding = AudioInputEncoding.BASE64;
         private PromptCacheMode promptCacheMode;
         private boolean strictTerminal;
+        private boolean thinkingPrefixBound;
         private boolean nativeWebSearch;
         private String nativeWebSearchType;
         private String thinkingField;
@@ -525,9 +528,11 @@ public final class ProviderModelCapabilities {
             copy.maxTokensField = source.maxTokensField;
             copy.defaultMaxTokens = source.defaultMaxTokens;
             copy.outputReserveTokens = source.outputReserveTokens;
+            copy.maxInputTokens = source.maxInputTokens;
             copy.audioInputEncoding = source.audioInputEncoding;
             copy.promptCacheMode = source.promptCacheMode;
             copy.strictTerminal = source.strictTerminal;
+            copy.thinkingPrefixBound = source.thinkingPrefixBound;
             copy.nativeWebSearch = source.nativeWebSearch;
             copy.nativeWebSearchType = source.nativeWebSearchType;
             copy.thinkingField = source.thinkingField;
@@ -561,6 +566,11 @@ public final class ProviderModelCapabilities {
             if (fragment.getOutputReserveTokens() != null) {
                 if (fragment.getOutputReserveTokens() <= 0) throw invalid(context + ".output-reserve-tokens must be > 0");
                 outputReserveTokens = fragment.getOutputReserveTokens();
+            }
+            if (fragment.getMaxInputTokens() != null) {
+                if (fragment.getMaxInputTokens() <= 0 || fragment.getMaxInputTokens() > 2_000_000)
+                    throw invalid(context + ".max-input-tokens must be between 1 and 2000000");
+                maxInputTokens = fragment.getMaxInputTokens();
             }
             if (fragment.getAudioInputEncoding() != null) {
                 if (api != Api.CHAT) {
@@ -615,6 +625,9 @@ public final class ProviderModelCapabilities {
             }
             if (fragment.getStrictTerminal() != null) {
                 strictTerminal = fragment.getStrictTerminal();
+            }
+            if (fragment.getThinkingPrefixBound() != null) {
+                thinkingPrefixBound = fragment.getThinkingPrefixBound();
             }
             if (fragment.getNativeWebSearch() != null) {
                 nativeWebSearch = fragment.getNativeWebSearch();
@@ -702,7 +715,7 @@ public final class ProviderModelCapabilities {
                 samplingPolicy, reasoningEfforts, reasoningEffortsDeclared, reasoningReplay,
                 functionToolReasoningEffort, thinkingRequiredEfforts, reasoningHistory, reasoningHistoryField,
                 instructionRole, maxTokensField, defaultMaxTokens, outputReserveTokens, audioInputEncoding, promptCacheMode, strictTerminal,
-                nativeWebSearch, nativeWebSearchType, thinking, modalities, requestOptions);
+                nativeWebSearch, nativeWebSearchType, thinking, modalities, requestOptions, thinkingPrefixBound, maxInputTokens);
         }
 
         private void validateReasoningHistory(String context, ThinkingSpec thinking) {
@@ -823,13 +836,13 @@ public final class ProviderModelCapabilities {
 
     private static boolean hasExplicitCapability(AgentConfig.ProviderCapabilities c) {
         if (c.getInstructionRole() != null || c.getMaxTokensField() != null
-            || c.getDefaultMaxTokens() != null || c.getOutputReserveTokens() != null || c.getAudioInputEncoding() != null
+            || c.getDefaultMaxTokens() != null || c.getOutputReserveTokens() != null || c.getMaxInputTokens() != null || c.getAudioInputEncoding() != null
             || c.getStreaming() != null || c.getStreamUsage() != null || c.getFunctionTools() != null
             || c.getSamplingPolicy() != null || c.getReasoningEfforts() != null
             || c.getReasoningReplay() != null || c.getFunctionToolReasoningEffort() != null
             || c.getThinkingRequiredEfforts() != null
             || c.getReasoningHistory() != null || c.getReasoningHistoryField() != null
-            || c.getPromptCacheMode() != null || c.getStrictTerminal() != null
+            || c.getPromptCacheMode() != null || c.getStrictTerminal() != null || c.getThinkingPrefixBound() != null
             || c.getNativeWebSearch() != null || c.getNativeWebSearchType() != null
             || (c.getRequestOptions() != null && !c.getRequestOptions().isEmpty())) {
             return true;
@@ -854,6 +867,9 @@ public final class ProviderModelCapabilities {
     }
 
     private static void validateProfileForApi(Profile profile, Api expected, String context) {
+        if (profile.thinkingPrefixBound() && expected != Api.ANTHROPIC) {
+            throw invalid(context + " thinking-prefix-bound is supported only by the Anthropic adapter");
+        }
         if (profile.api() != expected) {
             throw invalid(context + " resolved internal protocol '" + profile.api().wireName()
                 + "' but provider type requires '" + expected.wireName() + "'");
