@@ -12,6 +12,7 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-6860ff" alt="License: Apache 2.0" /></a>
   <a href="#选择使用入口"><img src="https://img.shields.io/badge/Platforms-Windows%20%7C%20macOS%20%7C%20Linux-6860ff" alt="Windows, macOS, Linux" /></a>
+  <a href="https://linux.do/"><img src="https://img.shields.io/badge/Community-Linux_DO-6860ff" alt="Linux DO 社区" /></a>
 </p>
 
 <p align="center">
