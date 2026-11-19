@@ -6,7 +6,7 @@ import { errorMessage, isRecord } from '../../utils/unknown'
 import WorkspaceFailure from '../WorkspaceFailure.vue'
 
 const props = defineProps<{ projects: SupervisorWorkspace[]; initialProject?: SupervisorWorkspace | null; opening?: boolean; externalError?: string; needsStop?: boolean }>()
-const emit = defineEmits<{ back: []; select: [project: SupervisorWorkspace, stopAcknowledged: boolean]; busy: [value: boolean]; removed: [id: string]; forgotten: [] }>()
+const emit = defineEmits<{ back: []; clearError: []; select: [project: SupervisorWorkspace, stopAcknowledged: boolean]; busy: [value: boolean]; removed: [id: string]; forgotten: [] }>()
 const missingInitial = ref(false)
 const profiles = ref<RemoteConnectionProfile[]>([])
 const aliases = ref<string[]>([])
@@ -200,7 +200,11 @@ async function back() {
   if (busy.value) { await cancel(); return }
   error.value = ''
   if (stage.value === 'hosts') emit('back')
-  else { stage.value = 'hosts'; active.value = null }
+  else {
+    stage.value = 'hosts'
+    active.value = null
+    emit('clearError')
+  }
 }
 async function remove(id: string) {
   if (removing.value !== id) { removing.value = id; return }
@@ -256,8 +260,18 @@ onBeforeUnmount(() => { disposed = true; ++generation; if (attemptId) void remot
 
 <template>
   <div class="remote-picker" :aria-busy="loading || busy || opening" @keydown.esc.stop.prevent="back">
+    <header v-if="!opening && !attempt?.challenge" class="picker-head">
+      <div class="picker-context">
+        <span class="scope">SSH</span>
+        <div class="picker-context-copy">
+          <strong :title="active?.name">{{ active?.name || t(stage === 'form' ? 'remote.connectionSettings' : 'remote.hostsTitle') }}</strong>
+          <small v-if="active && active.host !== active.name" :title="active.host">{{ active.host }}</small>
+        </div>
+      </div>
+      <button v-if="!busy" type="button" class="picker-back" @click="back">{{ t(stage === 'hosts' ? 'remote.back' : 'remote.hostsBack') }}</button>
+    </header>
     <fieldset v-if="!opening">
-    <p class="origin"><span class="scope">SSH</span>{{ remoteConnections.native ? t('remote.desktopOrigin') : t('remote.webOrigin') }}
+    <p class="origin">{{ remoteConnections.native ? t('remote.desktopOrigin') : t('remote.webOrigin') }}
       <span v-if="origin.machine" class="machine">{{ origin.machine }}</span></p>
     <template v-if="!attempt?.challenge">
     <template v-if="stage === 'hosts'">
@@ -291,11 +305,10 @@ onBeforeUnmount(() => { disposed = true; ++generation; if (attemptId) void remot
           <button v-if="remoteConnections.native" type="button" :disabled="busy" @click="pickKey">{{ t('remote.chooseKey') }}</button></span></label>
         <p>{{ t('remote.advancedHint') }}</p>
       </details>
-      <div class="actions"><button v-if="!busy" type="button" @click="back">{{ t('remote.hostsBack') }}</button>
+      <div class="actions">
         <button class="primary" :disabled="busy || !draft.host.trim()">{{ t('remote.connect') }}</button></div>
     </form>
     <template v-else-if="active && stage === 'services'">
-      <div class="connected-host"><span class="scope">SSH</span><strong>{{ active.name }}</strong><small>{{ active.host }}</small></div>
       <h3>{{ t('remote.existingServices') }}</h3>
       <p>{{ t('remote.existingServicesHint') }}</p>
       <form class="path-row" @submit.prevent="discoverServices"><label class="sr-only" for="ssh-service-data">{{ t('remote.serviceDataDir') }}</label>
@@ -312,7 +325,6 @@ onBeforeUnmount(() => { disposed = true; ++generation; if (attemptId) void remot
         <button v-if="initialProject?.remoteService && !services.length" :disabled="busy" @click="emit('select', initialProject, Boolean(props.needsStop))">{{ t(props.needsStop ? 'workspace.stopAndOpen' : 'remote.reconnect') }}</button></div>
     </template>
     <template v-else-if="active">
-      <div class="connected-host"><span class="scope">SSH</span><strong>{{ active.name }}</strong><small>{{ active.host }}</small></div>
       <button type="button" :disabled="busy" @click="discoverServices">{{ t('remote.existingServices') }}</button>
       <p>{{ t('remote.remoteDirectoryHint') }}</p>
       <form class="path-row" @submit.prevent="browse()"><label class="sr-only" for="ssh-remote-path">{{ t('remote.directory') }}</label>
@@ -327,7 +339,7 @@ onBeforeUnmount(() => { disposed = true; ++generation; if (attemptId) void remot
         <button v-for="project in recent" :key="project.id" :disabled="busy" @click="openRecent(project.root)"><span>{{ project.name }}</span><small>{{ project.root }}</small></button></div>
       <p class="prepare-hint">{{ t('remote.prepareHint') }}</p>
       <p v-if="needsStop" class="stop-warning" role="note">{{ t('workspace.switchWarning') }}</p>
-      <div class="actions"><button v-if="!busy && !opening" @click="back">{{ t('remote.hostsBack') }}</button>
+      <div class="actions">
         <button class="primary" :disabled="busy || !root.trim()" @click="open()">{{ t(needsStop ? 'workspace.stopAndOpen' : 'remote.openFolder') }}</button></div>
     </template>
     </template>
@@ -348,21 +360,33 @@ onBeforeUnmount(() => { disposed = true; ++generation; if (attemptId) void remot
         <div class="actions"><button type="button" @click="cancel">{{ t('workspace.cancel') }}</button><button class="primary" :disabled="submittingAnswer">{{ t('remote.continue') }}</button></div></template>
     </form>
     <WorkspaceFailure v-if="error || externalError" class="error" :message="error || externalError || ''" remote :code="error ? failureCode : ''" />
-    <div v-if="stage === 'hosts' && !attempt?.challenge && !opening && !busy" class="actions"><button @click="back">{{ t('remote.back') }}</button></div>
   </div>
 </template>
 
 <style scoped>
 .remote-picker { padding:18px; overflow:auto; max-height:70vh; }
+.picker-head {
+  position:sticky; top:-18px; z-index:1; display:flex; align-items:center; justify-content:space-between;
+  gap:16px; margin:-18px -18px 14px; padding:12px 18px;
+  border-bottom:1px solid var(--border); background:var(--surface-2);
+}
+.picker-context { display:flex; align-items:center; gap:8px; min-width:0; }
+.picker-context-copy { min-width:0; }
+.picker-context strong,.picker-context small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.picker-context strong { font-size:13px; font-weight:600; }
+.picker-context small { margin-top:2px; font-size:11px; color:var(--text-muted); }
+button.picker-back { flex-shrink:0; padding:6px 8px; border-color:transparent; color:var(--text-secondary); font-size:12px; }
+button.picker-back:hover { color:var(--accent-hover); }
 fieldset { border:0; padding:0; margin:0; min-width:0; }
 p { margin:0 0 14px; font-size:12px; line-height:1.6; color:var(--text-muted); }
-.origin { display:flex; align-items:center; flex-wrap:wrap; gap:6px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+.origin { overflow-wrap:anywhere; }
 .scope { font-size:10px; font-weight:700; padding:2px 6px; border-radius:5px; background:var(--accent-soft); color:var(--accent-hover); }
 .machine { font-family:var(--font-mono); color:var(--text-secondary); }
 label { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; font-size:12px; }
 input { min-width:0; width:100%; box-sizing:border-box; padding:9px; border:1px solid var(--border); border-radius:7px; background:var(--surface-1); color:var(--text-primary); }
 input:focus-visible,button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 .actions { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; margin:14px 0 0; }
+.actions > .primary { margin-inline-start:auto; }
 button { padding:7px 11px; border:1px solid var(--border); border-radius:7px; color:var(--text-primary); }
 button:hover:not(:disabled) { background:var(--surface-hover); } button:disabled { opacity:.5; cursor:default; }
 button.primary { background:var(--accent); color:var(--accent-contrast); border-color:var(--accent); }

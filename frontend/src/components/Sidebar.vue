@@ -297,6 +297,7 @@ async function openRemoteWorkspace(project: SupervisorWorkspace, stopAcknowledge
       @remote-selected="openRemoteWorkspace"
       @confirm="confirmWorkspaceSwitch"
       @refresh="refreshProjects"
+      @clear-error="localWorkspaceError = ''"
     />
   </aside>
 </template>

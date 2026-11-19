@@ -28,6 +28,7 @@ const emit = defineEmits<{
   confirm: []
   remoteSelected: [project: SupervisorWorkspace, stopAcknowledged?: boolean]
   refresh: []
+  clearError: []
 }>()
 
 const dialog = ref<HTMLElement | null>(null)
@@ -91,12 +92,18 @@ function chooseProject(project: SupervisorWorkspace) {
   else emit('select', project.id)
 }
 
+function backFromRemote() {
+  browsingRemote.value = false
+  remoteInitial.value = null
+  emit('clearError')
+}
+
 function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
     event.preventDefault()
     if (props.switching) { if (browsingRemote.value) void remotePicker.value?.cancel(); return }
     if (remoteBusy.value) { void remotePicker.value?.cancel(); return }
-    if (browsingRemote.value) { browsingRemote.value = false; return }
+    if (browsingRemote.value) { backFromRemote(); return }
     if (browsingDirectories.value && !props.directorySubmitting) browsingDirectories.value = false
     else emit('close')
     return
@@ -145,7 +152,8 @@ function handleKeydown(event: KeyboardEvent) {
             </button>
           </header>
 
-          <RemoteWorkspacePicker v-if="browsingRemote" :key="requestSequence" ref="remotePicker" :opening="switching" :external-error="error" :needs-stop="needsStop && (!remoteInitial || remoteInitial.id !== activeProject?.id)" :initial-project="remoteInitial" :projects="[...(activeProject ? [activeProject] : []), ...otherProjects]" @back="browsingRemote = false" @busy="remoteBusy = $event"
+          <RemoteWorkspacePicker v-if="browsingRemote" :key="requestSequence" ref="remotePicker" :opening="switching" :external-error="error" :needs-stop="needsStop && (!remoteInitial || remoteInitial.id !== activeProject?.id)" :initial-project="remoteInitial" :projects="[...(activeProject ? [activeProject] : []), ...otherProjects]" @back="backFromRemote" @busy="remoteBusy = $event"
+            @clear-error="emit('clearError')"
             @removed="connectionRemoved" @forgotten="emit('refresh')"
             @select="(project, stopAcknowledged) => emit('remoteSelected', project, stopAcknowledged)" />
           <WebDirectoryPicker v-else-if="browsingDirectories" :submitting="directorySubmitting"
